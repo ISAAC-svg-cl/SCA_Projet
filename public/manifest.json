@@ -1,0 +1,39 @@
+{
+  "name": "SCA – Société du Courant Alternatif",
+  "short_name": "SCA",
+  "description": "Société du Courant Alternatif - Électricité générale, matériel électrique, solutions solaires au Haut-Katanga, RDC",
+  "start_url": "/",
+  "id": "/",
+  "display": "standalone",
+  "background_color": "#0d1117",
+  "theme_color": "#1d4ed8",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "categories": ["business", "shopping", "utilities"],
+  "lang": "fr",
+  "scope": "/"
+}

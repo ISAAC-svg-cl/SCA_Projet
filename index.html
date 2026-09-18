@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" href="/logo.png?v=3" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SCA – Société du Courant Alternatif | Électricité & Solaire, Haut-Katanga</title>
+    <meta name="description" content="SCA – Votre partenaire en électricité générale et solutions solaires au Haut-Katanga, RDC. Matériel électrique, panneaux solaires, services d'installation et dépannage." />
+    <meta name="theme-color" content="#1d4ed8" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="SCA" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta property="og:title" content="SCA – Société du Courant Alternatif" />
+    <meta property="og:description" content="Électricité générale • Solutions solaires • Matériel électrique – Haut-Katanga, RDC" />
+    <meta property="og:image" content="/logo.png" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch(() => {});
+        });
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,241 @@
+/* stylelint-disable */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* SCA – Société du Courant Alternatif
+   Design: Industrial-Professional · Red/Blue/White brand palette
+   Bold structural identity: deep navy panels, brand red accent,
+   crisp white surfaces, angular industrial confidence */
+
+@font-face {
+  font-family: 'AlibabaPuHuiTi';
+  src: url('https://resource-static.bj.bcebos.com/fonts-skill/AlibabaPuHuiTi_Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'AlibabaPuHuiTi';
+  src: url('https://resource-static.bj.bcebos.com/fonts-skill/AlibabaPuHuiTi_Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-display: swap;
+}
+
+@layer base {
+  :root {
+    --radius: 0.375rem;
+
+    /* Crisp white background */
+    --background: 210 20% 98%;
+    --foreground: 220 30% 12%;
+
+    /* Light card surface */
+    --card: 0 0% 100%;
+    --card-foreground: 220 30% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 30% 12%;
+
+    /* SCA Brand Red — primary action */
+    --primary: 4 86% 46%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Deep Navy — structural/secondary */
+    --secondary: 220 55% 20%;
+    --secondary-foreground: 0 0% 100%;
+
+    /* Neutral muted */
+    --muted: 210 20% 93%;
+    --muted-foreground: 220 15% 45%;
+
+    /* Electric Blue accent */
+    --accent: 213 85% 42%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 75% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 15% 85%;
+    --input: 220 15% 85%;
+    --ring: 4 86% 46%;
+
+    /* Semantic status colors */
+    --success: 142 70% 40%;
+    --warning: 38 92% 50%;
+    --info: 213 85% 42%;
+    --success-foreground: 0 0% 100%;
+    --warning-foreground: 0 0% 100%;
+    --info-foreground: 0 0% 100%;
+
+    --chart-1: 4 86% 46%;
+    --chart-2: 213 85% 42%;
+    --chart-3: 220 55% 20%;
+    --chart-4: 142 70% 40%;
+    --chart-5: 38 92% 50%;
+
+    /* Sidebar — deep navy */
+    --sidebar-background: 220 55% 14%;
+    --sidebar-foreground: 210 30% 88%;
+    --sidebar-primary: 4 86% 52%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 45% 22%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 220 40% 22%;
+    --sidebar-ring: 4 86% 52%;
+  }
+
+  .dark {
+    --background: 220 30% 8%;
+    --foreground: 210 20% 92%;
+    --card: 220 30% 11%;
+    --card-foreground: 210 20% 92%;
+    --popover: 220 30% 11%;
+    --popover-foreground: 210 20% 92%;
+    --primary: 4 86% 52%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 45% 24%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 220 30% 16%;
+    --muted-foreground: 220 15% 58%;
+    --accent: 213 85% 50%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 75% 55%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 25% 22%;
+    --input: 220 25% 22%;
+    --ring: 4 86% 52%;
+    --success: 142 60% 45%;
+    --warning: 38 85% 55%;
+    --info: 213 75% 55%;
+    --chart-1: 4 86% 52%;
+    --chart-2: 213 75% 55%;
+    --chart-3: 220 45% 50%;
+    --chart-4: 142 60% 45%;
+    --chart-5: 38 85% 55%;
+    --sidebar-background: 220 35% 8%;
+    --sidebar-foreground: 210 25% 85%;
+    --sidebar-primary: 4 86% 52%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 35% 16%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 220 30% 18%;
+    --sidebar-ring: 4 86% 52%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border)) transparent;
+  }
+
+  html { color-scheme: light dark; }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'AlibabaPuHuiTi', 'Segoe UI', system-ui, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'AlibabaPuHuiTi', 'Segoe UI', system-ui, sans-serif;
+    font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+  }
+
+  *::-webkit-scrollbar { width: 6px; height: 6px; }
+  *::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 3px; }
+}
+
+@layer components {
+  /* SCA brand diagonal stripe — core visual signature */
+  .sca-stripe {
+    background-image: repeating-linear-gradient(
+      -45deg,
+      transparent,
+      transparent 8px,
+      hsl(var(--primary) / 0.08) 8px,
+      hsl(var(--primary) / 0.08) 10px
+    );
+  }
+
+  /* Red underline accent on headings */
+  .sca-heading-accent {
+    position: relative;
+    display: inline-block;
+  }
+  .sca-heading-accent::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -6px;
+    width: 48px;
+    height: 3px;
+    background: hsl(var(--primary));
+    border-radius: 2px;
+  }
+
+  /* Electric bolt decoration */
+  .sca-bolt-bg {
+    background-image:
+      radial-gradient(circle at 80% 20%, hsl(var(--primary) / 0.12) 0%, transparent 50%),
+      radial-gradient(circle at 20% 80%, hsl(var(--accent) / 0.10) 0%, transparent 45%);
+  }
+
+  /* Product card hover lift */
+  .product-card {
+    transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
+  }
+  .product-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px hsl(var(--primary) / 0.12);
+    border-color: hsl(var(--primary) / 0.4);
+  }
+
+  /* Nav link active indicator */
+  .nav-link-active {
+    color: hsl(var(--primary));
+    font-weight: 600;
+  }
+
+  /* Stock badge */
+  .badge-en-stock { @apply bg-green-100 text-green-700 border-green-200; }
+  .badge-stock-faible { @apply bg-orange-100 text-orange-700 border-orange-200; }
+  .badge-rupture { @apply bg-red-100 text-red-700 border-red-200; }
+
+  /* Hero gradient */
+  .hero-gradient {
+    background: linear-gradient(135deg,
+      hsl(220 55% 14%) 0%,
+      hsl(220 55% 20%) 50%,
+      hsl(213 85% 28%) 100%);
+  }
+
+  /* Section divider */
+  .section-divider {
+    height: 4px;
+    background: linear-gradient(90deg,
+      hsl(var(--primary)) 0%,
+      hsl(var(--accent)) 100%);
+  }
+}
+
+/* Gradient text utility */
+.gradient-text {
+  background-image: linear-gradient(90deg, hsl(var(--primary)), hsl(var(--accent)));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Smooth page transitions */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in-up {
+  animation: fadeInUp 0.4s ease forwards;
+}
