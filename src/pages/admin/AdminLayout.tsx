@@ -50,9 +50,9 @@ const AdminSidebarContent: React.FC<{ onNav?: () => void }> = ({ onNav }) => {
       {/* Logo */}
       <div className="flex items-center gap-3 px-4 py-5 border-b border-sidebar-border">
         <img
-          src="/logo.png?v=3"
+          src="/logo.png?v=5"
           alt="SCA"
-          className="w-10 h-10 object-contain"
+          className="w-10 h-10 object-contain drop-shadow-sm"
         />
         <div>
           <p className="font-bold text-sidebar-foreground text-sm">SCA Admin</p>

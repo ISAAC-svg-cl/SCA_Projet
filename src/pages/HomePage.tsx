@@ -46,7 +46,7 @@ const Hero: React.FC = () => (
       <div className="hidden md:flex justify-center">
         <div className="relative flex items-center justify-center">
           <img
-            src="/logo.png?v=3"
+            src="/logo.png?v=5"
             alt="SCA Logo"
             className="w-56 h-56 object-contain drop-shadow-2xl"
           />

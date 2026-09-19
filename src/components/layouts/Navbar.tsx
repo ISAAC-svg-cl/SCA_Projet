@@ -35,9 +35,9 @@ const Navbar: React.FC = () => {
         {/* Logo */}
         <Link to="/" className="flex items-center gap-3 shrink-0">
           <img
-            src="/logo.png?v=3"
+            src="/logo.png?v=5"
             alt="Logo SCA"
-            className="h-10 w-10 object-contain"
+            className="h-10 w-10 object-contain drop-shadow-sm"
           />
           <div className="hidden sm:block">
             <p className="font-bold text-primary-foreground text-sm leading-tight">SCA</p>
@@ -88,9 +88,9 @@ const Navbar: React.FC = () => {
             <SheetContent side="left" className="w-72 bg-sidebar p-0">
               <div className="flex items-center gap-3 p-4 border-b border-sidebar-border">
                 <img
-                  src="/logo.png?v=3"
+                  src="/logo.png?v=5"
                   alt="SCA"
-                  className="h-12 w-12 object-contain"
+                  className="h-12 w-12 object-contain drop-shadow-sm"
                 />
                 <div>
                   <p className="font-bold text-sidebar-foreground">SCA</p>

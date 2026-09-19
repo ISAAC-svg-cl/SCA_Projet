@@ -10,9 +10,9 @@ const Footer: React.FC = () => (
       <div>
         <div className="flex items-center gap-3 mb-4">
           <img
-            src="/logo.png?v=3"
+            src="/logo.png?v=5"
             alt="SCA"
-            className="h-12 w-12 object-contain"
+            className="h-12 w-12 object-contain drop-shadow-sm"
           />
           <div>
             <p className="font-bold text-white">SCA</p>

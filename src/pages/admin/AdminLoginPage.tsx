@@ -46,9 +46,9 @@ const AdminLoginPage: React.FC = () => {
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
           <img
-            src="/logo.png?v=3"
+            src="/logo.png?v=5"
             alt="SCA"
-            className="w-24 h-24 object-contain mb-4 drop-shadow-md"
+            className="w-24 h-24 object-contain drop-shadow-lg mb-4"
           />
           <h1 className="text-2xl font-bold text-white">Espace Administrateur</h1>
           <p className="text-secondary-foreground/60 text-sm mt-1">SCA – Société du Courant Alternatif</p>
