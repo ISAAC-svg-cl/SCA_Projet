@@ -18,6 +18,7 @@ import { fetchAllProducts, fetchCategories, upsertProduct, deleteProduct } from 
 import { getStockStatus, stockLabel, stockBadgeClass, formatPrice } from '@/lib/helpers';
 import type { Product, Category } from '@/types/index';
 import { toast } from 'sonner';
+import { supabase } from '@/supabaseClient';
 
 const emptyForm = {
   name: '', reference: '', description: '', category_id: '',
@@ -34,6 +35,8 @@ const AdminProducts: React.FC = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
+  // New state for image file selection
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -74,6 +77,25 @@ const AdminProducts: React.FC = () => {
     }
     setSaving(true);
     try {
+      // If a new image file is selected, upload it first
+      let uploadedImageUrl = form.image_url.trim() || null;
+      if (selectedFile) {
+        const fileExt = selectedFile.name.split('.').pop();
+        const fileName = `${crypto.randomUUID()}.${fileExt}`;
+        const { error } = await supabase.storage
+          .from('product-images')
+          .upload(fileName, selectedFile);
+        if (error) {
+          console.error('Upload error:', error);
+          toast.error('Erreur lors de l\'upload de l\'image');
+          setSaving(false);
+          return;
+        }
+        // Public URL (adjust if you use a custom domain)
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+        uploadedImageUrl = `${supabaseUrl}/storage/v1/object/public/product-images/${fileName}`;
+      }
+
       await upsertProduct({
         ...(editingId ? { id: editingId } : {}),
         name: form.name.trim(),
@@ -83,11 +105,13 @@ const AdminProducts: React.FC = () => {
         price: parseFloat(form.price),
         stock_quantity: parseInt(form.stock_quantity) || 0,
         stock_threshold: parseInt(form.stock_threshold) || 5,
-        image_url: form.image_url.trim() || null,
+        image_url: uploadedImageUrl,
         is_active: form.is_active,
       });
       toast.success(editingId ? 'Produit mis à jour' : 'Produit créé');
       setDialogOpen(false);
+      // Reset selected file after successful save
+      setSelectedFile(null);
       load();
     } catch (err) {
       console.error(err);
@@ -226,6 +250,18 @@ const AdminProducts: React.FC = () => {
             <div className="space-y-2">
               <Label>URL image</Label>
               <Input value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} placeholder="https://…" />
+              {/* File upload for new image */}
+              <Label className="mt-2">Uploader une image</Label>
+              <Input type="file" accept="image/*" onChange={(e) => {
+                const file = e.target.files?.[0] || null;
+                setSelectedFile(file);
+                // Show a preview if possible
+                if (file) {
+                  const reader = new FileReader();
+                  reader.onload = () => setForm({ ...form, image_url: reader.result as string });
+                  reader.readAsDataURL(file);
+                }
+              }} />
             </div>
           </div>
           <DialogFooter className="gap-2">
