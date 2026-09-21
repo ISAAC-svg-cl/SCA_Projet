@@ -34,3 +34,4 @@ history/*.json
 .vercel
 
 supabase/.temp
+.env*
