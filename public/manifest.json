@@ -4,10 +4,14 @@
   "description": "Société du Courant Alternatif - Électricité générale, matériel électrique, solutions solaires au Haut-Katanga, RDC",
   "start_url": "/",
   "id": "/",
+  "scope": "/",
   "display": "standalone",
+  "orientation": "portrait-primary",
   "background_color": "#0d1117",
   "theme_color": "#1d4ed8",
-  "orientation": "portrait-primary",
+  "lang": "fr-CD",
+  "dir": "ltr",
+  "categories": ["business", "shopping", "utilities"],
   "icons": [
     {
       "src": "/pwa-192x192.png",
@@ -28,12 +32,37 @@
       "purpose": "maskable"
     },
     {
-      "src": "/logo.png",
-      "sizes": "512x512",
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon.png",
+      "sizes": "64x64",
       "type": "image/png"
     }
   ],
-  "categories": ["business", "shopping", "utilities"],
-  "lang": "fr",
-  "scope": "/"
+  "shortcuts": [
+    {
+      "name": "Boutique",
+      "short_name": "Boutique",
+      "description": "Voir nos produits électriques et solaires",
+      "url": "/boutique",
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Demander un Devis",
+      "short_name": "Devis",
+      "description": "Demande de devis gratuit",
+      "url": "/devis",
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Suivi de Commande",
+      "short_name": "Suivi",
+      "description": "Suivre l'état de votre commande",
+      "url": "/suivi-commande",
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192" }]
+    }
+  ]
 }

@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import IntersectObserver from '@/components/common/IntersectObserver';
 import { Toaster } from '@/components/ui/sonner';
 import { CartProvider } from '@/contexts/CartContext';
+import { PWAInstallPrompt } from '@/components/PWAInstallPrompt';
 import { routes } from './routes';
 
 const App: React.FC = () => {
@@ -16,6 +17,7 @@ const App: React.FC = () => {
           ))}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        <PWAInstallPrompt />
         <Toaster richColors position="top-right" />
       </CartProvider>
     </Router>
