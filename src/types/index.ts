@@ -13,11 +13,32 @@ export interface Category {
   id: string; name: string; slug: string; description: string | null;
   type: 'electricite' | 'solaire'; icon: string | null; sort_order: number; created_at: string;
 }
+export interface ProductImage {
+  id: string;
+  product_id: string;
+  image_url: string;
+  alt_text?: string | null;
+  is_primary: boolean;
+  sort_order: number;
+  created_at?: string;
+}
+
 export interface Product {
-  id: string; category_id: string; name: string; description: string | null;
-  reference: string; price: number; stock_quantity: number; stock_threshold: number;
-  image_url: string | null; is_active: boolean; created_at: string; updated_at: string;
+  id: string;
+  category_id: string;
+  name: string;
+  description: string | null;
+  reference: string;
+  price: number;
+  promo_price?: number | null;
+  stock_quantity: number;
+  stock_threshold: number;
+  image_url: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
   categories?: Category;
+  images?: ProductImage[];
 }
 export interface Client {
   id: string; full_name: string; phone: string; email: string | null;

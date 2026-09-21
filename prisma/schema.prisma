@@ -1,0 +1,217 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum UserRole {
+  user
+  admin
+}
+
+enum StockStatus {
+  en_stock
+  stock_faible
+  rupture
+}
+
+enum OrderStatus {
+  en_attente
+  confirme
+  en_preparation
+  livre
+  annule
+}
+
+enum DeliveryMode {
+  livraison
+  retrait
+}
+
+enum QuoteStatus {
+  nouveau
+  en_cours
+  traite
+  rejete
+}
+
+model Profile {
+  id         String   @id @default(uuid()) @db.Uuid
+  email      String?
+  phone      String?
+  full_name  String?
+  role       UserRole @default(user)
+  created_at DateTime @default(now()) @db.Timestamptz()
+
+  clients Client[]
+  orders  Order[]
+
+  @@map("profiles")
+}
+
+model Category {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String
+  slug        String   @unique
+  description String?
+  type        String // 'electricite' | 'solaire'
+  icon        String?
+  sort_order  Int      @default(0)
+  created_at  DateTime @default(now()) @db.Timestamptz()
+
+  products Product[]
+
+  @@map("categories")
+}
+
+model Product {
+  id              String   @id @default(uuid()) @db.Uuid
+  category_id     String   @db.Uuid
+  name            String
+  description     String?
+  reference       String   @unique
+  price           Decimal  @db.Decimal(12, 2)
+  promo_price     Decimal? @db.Decimal(12, 2)
+  stock_quantity  Int      @default(0)
+  stock_threshold Int      @default(5)
+  image_url       String?
+  is_active       Boolean  @default(true)
+  created_at      DateTime @default(now()) @db.Timestamptz()
+  updated_at      DateTime @default(now()) @updatedAt @db.Timestamptz()
+
+  category   Category       @relation(fields: [category_id], references: [id], onDelete: Restrict)
+  images     ProductImage[]
+  orderItems OrderItem[]
+
+  @@map("products")
+}
+
+model ProductImage {
+  id         String   @id @default(uuid()) @db.Uuid
+  product_id String   @db.Uuid
+  image_url  String
+  alt_text   String?
+  is_primary Boolean  @default(false)
+  sort_order Int      @default(0)
+  created_at DateTime @default(now()) @db.Timestamptz()
+
+  product Product @relation(fields: [product_id], references: [id], onDelete: Cascade)
+
+  @@index([product_id])
+  @@map("product_images")
+}
+
+model Client {
+  id         String   @id @default(uuid()) @db.Uuid
+  full_name  String
+  phone      String
+  email      String?
+  address    String?
+  profile_id String?  @db.Uuid
+  created_at DateTime @default(now()) @db.Timestamptz()
+
+  profile  Profile?  @relation(fields: [profile_id], references: [id], onDelete: SetNull)
+  orders   Order[]
+  invoices Invoice[]
+
+  @@map("clients")
+}
+
+model Order {
+  id               String       @id @default(uuid()) @db.Uuid
+  order_number     String       @unique
+  client_id        String       @db.Uuid
+  profile_id       String?      @db.Uuid
+  status           OrderStatus  @default(en_attente)
+  delivery_mode    DeliveryMode @default(livraison)
+  delivery_address String?
+  subtotal         Decimal      @default(0) @db.Decimal(12, 2)
+  delivery_fee     Decimal      @default(0) @db.Decimal(12, 2)
+  total            Decimal      @default(0) @db.Decimal(12, 2)
+  notes            String?
+  created_at       DateTime     @default(now()) @db.Timestamptz()
+  updated_at       DateTime     @default(now()) @updatedAt @db.Timestamptz()
+
+  client     Client      @relation(fields: [client_id], references: [id], onDelete: Restrict)
+  profile    Profile?    @relation(fields: [profile_id], references: [id], onDelete: SetNull)
+  orderItems OrderItem[]
+  invoice    Invoice?
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id                String   @id @default(uuid()) @db.Uuid
+  order_id          String   @db.Uuid
+  product_id        String   @db.Uuid
+  product_name      String
+  product_reference String
+  unit_price        Decimal  @db.Decimal(12, 2)
+  quantity          Int
+  total             Decimal  @db.Decimal(12, 2)
+  created_at        DateTime @default(now()) @db.Timestamptz()
+
+  order   Order   @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [product_id], references: [id], onDelete: Restrict)
+
+  @@map("order_items")
+}
+
+model Invoice {
+  id             String   @id @default(uuid()) @db.Uuid
+  invoice_number String   @unique
+  order_id       String   @unique @db.Uuid
+  client_id      String   @db.Uuid
+  total          Decimal  @db.Decimal(12, 2)
+  issued_at      DateTime @default(now()) @db.Timestamptz()
+  created_at     DateTime @default(now()) @db.Timestamptz()
+
+  order  Order  @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  client Client @relation(fields: [client_id], references: [id], onDelete: Restrict)
+
+  @@map("invoices")
+}
+
+model Quote {
+  id           String      @id @default(uuid()) @db.Uuid
+  quote_number String      @unique
+  full_name    String
+  phone        String
+  email        String?
+  project_type String
+  description  String
+  address      String?
+  photo_urls   String[]
+  status       QuoteStatus @default(nouveau)
+  admin_notes  String?
+  created_at   DateTime    @default(now()) @db.Timestamptz()
+  updated_at   DateTime    @default(now()) @updatedAt @db.Timestamptz()
+
+  @@map("quotes")
+}
+
+model StudyRequest {
+  id               String   @id @default(uuid()) @db.Uuid
+  full_name        String
+  phone            String
+  email            String?
+  need_description String
+  status           String   @default("nouveau")
+  created_at       DateTime @default(now()) @db.Timestamptz()
+
+  @@map("study_requests")
+}
+
+model Review {
+  id           String   @id @default(uuid()) @db.Uuid
+  author_name  String
+  rating       Int
+  comment      String
+  is_published Boolean  @default(true)
+  created_at   DateTime @default(now()) @db.Timestamptz()
+
+  @@map("reviews")
+}

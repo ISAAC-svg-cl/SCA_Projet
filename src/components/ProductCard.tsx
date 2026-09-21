@@ -58,7 +58,16 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           )}
 
           <div className="flex items-center justify-between mt-auto pt-2 border-t border-border">
-            <span className="text-lg font-bold text-primary">{formatPrice(product.price)}</span>
+            <div className="flex items-baseline gap-1.5">
+              {product.promo_price ? (
+                <>
+                  <span className="text-lg font-bold text-primary">{formatPrice(product.promo_price)}</span>
+                  <span className="text-xs text-muted-foreground line-through">{formatPrice(product.price)}</span>
+                </>
+              ) : (
+                <span className="text-lg font-bold text-primary">{formatPrice(product.price)}</span>
+              )}
+            </div>
             <div className="flex gap-1">
               <Button
                 variant="outline"

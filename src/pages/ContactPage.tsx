@@ -143,11 +143,11 @@ const ContactPage: React.FC = () => {
 
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="study_name">Nom complet *</Label>
+                      <Label htmlFor="study_name">Nom complet</Label>
                       <Input id="study_name" value={studyForm.full_name} onChange={(e) => setStudyForm({ ...studyForm, full_name: e.target.value })} placeholder="Votre nom" required />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="study_phone">Téléphone *</Label>
+                      <Label htmlFor="study_phone">Téléphone</Label>
                       <Input id="study_phone" value={studyForm.phone} onChange={(e) => setStudyForm({ ...studyForm, phone: e.target.value })} placeholder="085 000 00 00" required />
                     </div>
                   </div>
@@ -158,7 +158,7 @@ const ContactPage: React.FC = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="study_desc">Décrivez votre besoin *</Label>
+                    <Label htmlFor="study_desc">Décrivez votre besoin</Label>
                     <Textarea
                       id="study_desc"
                       value={studyForm.need_description}

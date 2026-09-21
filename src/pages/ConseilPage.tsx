@@ -89,7 +89,7 @@ const ConseilPage: React.FC = () => {
           <Card className="border border-border">
             <CardHeader>
               <CardTitle>Décrivez votre besoin</CardTitle>
-              <CardDescription>Les champs * sont obligatoires. Réponse sous 24h.</CardDescription>
+              <CardDescription>Les champs sont obligatoires. Réponse sous 24h.</CardDescription>
             </CardHeader>
             <CardContent>
               {done ? (

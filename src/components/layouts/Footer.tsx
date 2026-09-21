@@ -37,6 +37,7 @@ const Footer: React.FC = () => (
             { label: 'Quincaillerie', path: '/boutique' },
             { label: 'Nos services', path: '/services' },
             { label: 'Demander un devis', path: '/devis' },
+            { label: 'Suivre ma commande', path: '/suivi-commande' },
             { label: 'Conseil / Étude', path: '/conseil' },
             { label: 'Contact', path: '/contact' },
           ].map((l) => (

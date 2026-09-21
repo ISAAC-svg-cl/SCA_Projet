@@ -34,11 +34,11 @@ const AdminInvoices: React.FC = () => {
     setPdfLoading(invoice.id);
     try {
       const full = await fetchInvoiceByOrderId(invoice.order_id);
-      if (!full) { toast.error('Facture introuvable'); return; }
-      generateInvoicePDF(full);
+      generateInvoicePDF(full || invoice);
+      toast.success('Facture PDF téléchargée');
     } catch (err) {
       console.error(err);
-      toast.error('Erreur PDF');
+      toast.error('Erreur lors de la génération PDF');
     } finally {
       setPdfLoading(null);
     }

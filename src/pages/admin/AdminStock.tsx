@@ -5,8 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import AdminLayout from './AdminLayout';
-import { fetchAllProducts } from '@/services/api';
-import { supabase } from '@/db/supabase';
+import { fetchAllProducts, updateProductStock } from '@/services/api';
 import { getStockStatus, stockLabel, stockBadgeClass, formatPrice } from '@/lib/helpers';
 import type { Product } from '@/types/index';
 import { toast } from 'sonner';
@@ -24,7 +23,12 @@ const AdminStock: React.FC = () => {
     fetchAllProducts().then(setProducts).catch(console.error).finally(() => setLoading(false));
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    load();
+    const handleUpdated = () => load();
+    window.addEventListener('sca:products-updated', handleUpdated);
+    return () => window.removeEventListener('sca:products-updated', handleUpdated);
+  }, [load]);
 
   const filtered = products.filter((p) => {
     const status = getStockStatus(p);
@@ -49,14 +53,13 @@ const AdminStock: React.FC = () => {
     if (isNaN(newQty) || newQty < 0) { toast.error('Quantité invalide'); return; }
     setSaving(product.id);
     try {
-      const { error } = await supabase.from('products').update({ stock_quantity: newQty, updated_at: new Date().toISOString() }).eq('id', product.id);
-      if (error) throw error;
-      toast.success(`Stock mis à jour : ${product.name}`);
+      await updateProductStock(product.id, newQty);
+      toast.success(`Stock mis à jour : ${product.name} (${newQty})`);
       load();
       setEditing((prev) => { const n = { ...prev }; delete n[product.id]; return n; });
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      toast.error('Erreur lors de la mise à jour');
+      toast.error(err?.message || 'Erreur lors de la mise à jour');
     } finally {
       setSaving(null);
     }

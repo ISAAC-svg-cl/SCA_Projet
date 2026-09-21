@@ -32,3 +32,5 @@ history/*.json
 .vite_cache
 
 .vercel
+
+supabase/.temp

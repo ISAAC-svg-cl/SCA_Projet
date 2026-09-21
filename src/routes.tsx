@@ -17,6 +17,7 @@ import AdminOrders from './pages/admin/AdminOrders';
 import AdminInvoices from './pages/admin/AdminInvoices';
 import AdminQuotes from './pages/admin/AdminQuotes';
 import AdminClients from './pages/admin/AdminClients';
+import OrderTrackingPage from './pages/OrderTrackingPage';
 
 export interface RouteConfig {
   name: string;
@@ -36,6 +37,7 @@ export const routes: RouteConfig[] = [
   { name: 'Devis',        path: '/devis',           element: <DevisPage />,       public: true },
   { name: 'Contact',      path: '/contact',         element: <ContactPage />,     public: true },
   { name: 'Conseil',      path: '/conseil',         element: <ConseilPage />,     public: true },
+  { name: 'Suivi commande', path: '/suivi-commande', element: <OrderTrackingPage />, public: true },
 
   // ── Admin ─────────────────────────────────────────────────────
   { name: 'Admin Login',    path: '/admin',                 element: <AdminLoginPage />,  public: true },

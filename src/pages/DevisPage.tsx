@@ -120,17 +120,17 @@ const DevisPage: React.FC = () => {
               <FileText className="w-5 h-5 text-primary" />
               Formulaire de devis
             </CardTitle>
-            <CardDescription>Les champs marqués * sont obligatoires</CardDescription>
+            <CardDescription>Les champs marqués sont obligatoires</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="grid sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="full_name">Nom complet *</Label>
+                  <Label htmlFor="full_name">Nom complet</Label>
                   <Input id="full_name" value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} placeholder="Votre nom" required />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Téléphone *</Label>
+                  <Label htmlFor="phone">Téléphone</Label>
                   <Input id="phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="085 000 00 00" required />
                 </div>
               </div>
@@ -141,7 +141,7 @@ const DevisPage: React.FC = () => {
               </div>
 
               <div className="space-y-2">
-                <Label>Type de projet *</Label>
+                <Label>Type de projet</Label>
                 <Select value={form.project_type} onValueChange={(v) => setForm({ ...form, project_type: v })}>
                   <SelectTrigger><SelectValue placeholder="Choisir un type de projet" /></SelectTrigger>
                   <SelectContent>
@@ -153,7 +153,7 @@ const DevisPage: React.FC = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="description">Description du projet *</Label>
+                <Label htmlFor="description">Description du projet</Label>
                 <Textarea
                   id="description"
                   value={form.description}

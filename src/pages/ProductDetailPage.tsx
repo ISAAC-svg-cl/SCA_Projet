@@ -91,13 +91,30 @@ const ProductDetailPage: React.FC = () => {
         </Button>
 
         <div className="grid md:grid-cols-2 gap-10">
-          {/* Image */}
-          <div className="aspect-square w-full overflow-hidden rounded-lg bg-muted border border-border">
-            {product.image_url ? (
-              <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center">
-                <Package className="w-24 h-24 text-muted-foreground" />
+          {/* Image Gallery */}
+          <div className="space-y-3">
+            <div className="aspect-square w-full overflow-hidden rounded-lg bg-muted border border-border">
+              {product.image_url ? (
+                <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <Package className="w-24 h-24 text-muted-foreground" />
+                </div>
+              )}
+            </div>
+            {/* Secondary images thumbnails */}
+            {product.images && product.images.length > 0 && (
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {product.image_url && (
+                  <div className="w-16 h-16 rounded-md overflow-hidden border-2 border-primary shrink-0">
+                    <img src={product.image_url} alt="" className="w-full h-full object-cover" />
+                  </div>
+                )}
+                {product.images.map((img) => (
+                  <div key={img.id} className="w-16 h-16 rounded-md overflow-hidden border border-border shrink-0 hover:border-primary transition-colors cursor-pointer">
+                    <img src={img.image_url} alt={img.alt_text || ''} className="w-full h-full object-cover" />
+                  </div>
+                ))}
               </div>
             )}
           </div>
@@ -114,7 +131,17 @@ const ProductDetailPage: React.FC = () => {
 
             <p className="text-sm font-mono text-muted-foreground">Réf: {product.reference}</p>
 
-            <div className="text-3xl font-bold text-primary">{formatPrice(product.price)}</div>
+            <div className="flex items-baseline gap-3">
+              {product.promo_price ? (
+                <>
+                  <span className="text-3xl font-bold text-primary">{formatPrice(product.promo_price)}</span>
+                  <span className="text-lg text-muted-foreground line-through">{formatPrice(product.price)}</span>
+                  <Badge variant="destructive" className="text-xs">Promo</Badge>
+                </>
+              ) : (
+                <span className="text-3xl font-bold text-primary">{formatPrice(product.price)}</span>
+              )}
+            </div>
 
             <Badge variant="outline" className={`w-fit border ${stockBadgeClass(status)}`}>
               {stockLabel(status)}
