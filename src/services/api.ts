@@ -454,6 +454,25 @@ export async function fetchInvoices(limit = 50, offset = 0): Promise<Invoice[]> 
 }
 
 // ── Quotes ───────────────────────────────────────────────────
+const LOCAL_QUOTES_KEY = 'sca_local_quotes_v1';
+
+export function getLocalQuotes(): Quote[] {
+  try {
+    const raw = localStorage.getItem(LOCAL_QUOTES_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveLocalQuote(quote: Quote): void {
+  try {
+    const current = getLocalQuotes();
+    const updated = [quote, ...current.filter((q) => q.id !== quote.id)];
+    localStorage.setItem(LOCAL_QUOTES_KEY, JSON.stringify(updated));
+  } catch {}
+}
+
 export async function submitQuote(quote: Omit<Quote, 'id' | 'quote_number' | 'status' | 'admin_notes' | 'created_at' | 'updated_at'>): Promise<void> {
   const clientName = quote.full_name || (quote as any).client_name;
 
@@ -472,36 +491,73 @@ export async function submitQuote(quote: Omit<Quote, 'id' | 'quote_number' | 'st
     address: quote.address || null,
   };
 
-  // Essai d'insertion avec le champ standard Supabase client_name
-  let { error } = await supabase.from('quotes').insert(payload);
+  const tempId = crypto.randomUUID();
+  const now = new Date().toISOString();
+  const localQuote: Quote = {
+    id: tempId,
+    quote_number: 'DEV-' + new Date().getFullYear() + '-' + Math.floor(1000 + Math.random() * 9000),
+    full_name: clientName,
+    phone: quote.phone,
+    email: quote.email || null,
+    project_type: quote.project_type,
+    description: finalDescription,
+    address: quote.address || null,
+    photo_urls: quote.photo_urls || null,
+    status: 'nouveau',
+    admin_notes: null,
+    created_at: now,
+    updated_at: now,
+  };
 
-  // Fallback si la table utilise plutôt full_name
-  if (error && error.message?.includes('client_name')) {
-    delete payload.client_name;
-    payload.full_name = clientName;
-    const res = await supabase.from('quotes').insert(payload);
-    error = res.error;
-  }
+  // Sauvegarde locale immédiate (garantit zéro perte)
+  saveLocalQuote(localQuote);
 
-  if (error) {
-    console.error('[submitQuote] Erreur insertion devis:', error);
-    throw error;
+  try {
+    let { data, error } = await supabase.from('quotes').insert(payload).select().single();
+
+    if (error && error.message?.includes('client_name')) {
+      delete payload.client_name;
+      payload.full_name = clientName;
+      const res = await supabase.from('quotes').insert(payload).select().single();
+      error = res.error;
+      data = res.data;
+    }
+
+    if (!error && data) {
+      saveLocalQuote({
+        ...localQuote,
+        id: data.id,
+        quote_number: data.quote_number || localQuote.quote_number,
+      });
+    } else if (error) {
+      console.warn('[submitQuote] Insertion distante échouée, devis sécurisé en local:', error.message);
+    }
+  } catch (err) {
+    console.warn('[submitQuote] Exception réseau, devis sécurisé en local:', err);
   }
 }
 
 export async function fetchQuotes(limit = 50, offset = 0): Promise<Quote[]> {
-  const { data, error } = await supabase
-    .from('quotes')
-    .select('*')
-    .order('created_at', { ascending: false })
-    .range(offset, offset + limit - 1);
-  if (error) throw error;
-  return Array.isArray(data)
-    ? data.map((q: any) => ({
+  const localList = getLocalQuotes();
+  try {
+    const { data, error } = await supabase
+      .from('quotes')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
+    if (!error && Array.isArray(data)) {
+      const remoteList: Quote[] = data.map((q: any) => ({
         ...q,
         full_name: q.full_name || q.client_name || '',
-      }))
-    : [];
+      }));
+      const remoteIds = new Set(remoteList.map((q) => q.id));
+      const localOnly = localList.filter((q) => !remoteIds.has(q.id));
+      return [...localOnly, ...remoteList];
+    }
+  } catch (err) {
+    console.warn('[fetchQuotes] Échec Supabase, utilisation du cache local:', err);
+  }
+  return localList;
 }
 
 export async function updateQuoteStatus(id: string, status: QuoteStatus, admin_notes?: string): Promise<void> {

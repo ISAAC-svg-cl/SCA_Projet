@@ -83,9 +83,9 @@ const DevisPage: React.FC = () => {
       });
       setSubmitted(true);
       toast.success('Votre demande de devis a été envoyée !');
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      toast.error('Erreur lors de l\'envoi. Veuillez réessayer.');
+      toast.error(err?.message || 'Erreur lors de l\'envoi. Veuillez réessayer.');
     } finally {
       setUploading(false);
     }

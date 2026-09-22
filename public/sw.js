@@ -1,5 +1,5 @@
 // Service Worker SCA PWA
-const CACHE_NAME = 'sca-pwa-v4';
+const CACHE_NAME = 'sca-pwa-v5';
 const PRECACHE_URLS = [
   '/',
   '/index.html',
