@@ -42,19 +42,23 @@ const DevisPage: React.FC = () => {
 
   const uploadPhotos = async (): Promise<string[]> => {
     const urls: string[] = [];
-    for (const file of photos) {
-      const dot = file.name.lastIndexOf('.');
-      const stem = dot > 0 ? file.name.slice(0, dot) : file.name;
-      const ext = dot > 0 ? file.name.slice(dot) : '';
-      const safeName = `${toHex(stem)}${ext}`;
-      const path = `devis/${Date.now()}_${safeName}`;
-      const { data, error } = await supabase.storage
-        .from('quote-photos')
-        .upload(path, file, { contentType: file.type });
-      if (!error && data) {
-        const { data: urlData } = supabase.storage.from('quote-photos').getPublicUrl(data.path);
-        urls.push(urlData.publicUrl);
+    try {
+      for (const file of photos) {
+        const dot = file.name.lastIndexOf('.');
+        const stem = dot > 0 ? file.name.slice(0, dot) : file.name;
+        const ext = dot > 0 ? file.name.slice(dot) : '';
+        const safeName = `${toHex(stem)}${ext}`;
+        const path = `devis/${Date.now()}_${safeName}`;
+        const { data, error } = await supabase.storage
+          .from('quote-photos')
+          .upload(path, file, { contentType: file.type });
+        if (!error && data) {
+          const { data: urlData } = supabase.storage.from('quote-photos').getPublicUrl(data.path);
+          urls.push(urlData.publicUrl);
+        }
       }
+    } catch (e) {
+      console.warn('Storage upload photos skipped or bucket unavailable:', e);
     }
     return urls;
   };

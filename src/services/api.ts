@@ -455,8 +455,38 @@ export async function fetchInvoices(limit = 50, offset = 0): Promise<Invoice[]> 
 
 // ── Quotes ───────────────────────────────────────────────────
 export async function submitQuote(quote: Omit<Quote, 'id' | 'quote_number' | 'status' | 'admin_notes' | 'created_at' | 'updated_at'>): Promise<void> {
-  const { error } = await supabase.from('quotes').insert({ ...quote, quote_number: '' });
-  if (error) throw error;
+  const clientName = quote.full_name || (quote as any).client_name;
+
+  // Intégrer les liens de photos éventuels dans la description
+  let finalDescription = quote.description;
+  if (quote.photo_urls && quote.photo_urls.length > 0) {
+    finalDescription += `\n\n[Photos jointes :\n${quote.photo_urls.map((u) => `- ${u}`).join('\n')}]`;
+  }
+
+  const payload: Record<string, any> = {
+    client_name: clientName,
+    phone: quote.phone,
+    email: quote.email || null,
+    project_type: quote.project_type,
+    description: finalDescription,
+    address: quote.address || null,
+  };
+
+  // Essai d'insertion avec le champ standard Supabase client_name
+  let { error } = await supabase.from('quotes').insert(payload);
+
+  // Fallback si la table utilise plutôt full_name
+  if (error && error.message?.includes('client_name')) {
+    delete payload.client_name;
+    payload.full_name = clientName;
+    const res = await supabase.from('quotes').insert(payload);
+    error = res.error;
+  }
+
+  if (error) {
+    console.error('[submitQuote] Erreur insertion devis:', error);
+    throw error;
+  }
 }
 
 export async function fetchQuotes(limit = 50, offset = 0): Promise<Quote[]> {
@@ -466,7 +496,12 @@ export async function fetchQuotes(limit = 50, offset = 0): Promise<Quote[]> {
     .order('created_at', { ascending: false })
     .range(offset, offset + limit - 1);
   if (error) throw error;
-  return Array.isArray(data) ? data : [];
+  return Array.isArray(data)
+    ? data.map((q: any) => ({
+        ...q,
+        full_name: q.full_name || q.client_name || '',
+      }))
+    : [];
 }
 
 export async function updateQuoteStatus(id: string, status: QuoteStatus, admin_notes?: string): Promise<void> {
