@@ -374,14 +374,44 @@ export async function createOrder(
   return { orderId, orderNumber };
 }
 
+// ── Orders ───────────────────────────────────────────────────
+const ORDER_OVERRIDES_KEY = 'sca_order_overrides_v1';
+
+export function getOrderOverrides(): Record<string, Partial<Order>> {
+  try {
+    const raw = localStorage.getItem(ORDER_OVERRIDES_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+export function saveOrderOverride(id: string, updates: Partial<Order>): void {
+  try {
+    const current = getOrderOverrides();
+    current[id] = { ...(current[id] || {}), ...updates };
+    localStorage.setItem(ORDER_OVERRIDES_KEY, JSON.stringify(current));
+  } catch (e) {
+    console.warn('Could not save order override:', e);
+  }
+}
+
 export async function fetchOrders(limit = 50, offset = 0): Promise<Order[]> {
-  const { data, error } = await supabase
-    .from('orders')
-    .select('*, clients!client_id(*), order_items(*)')
-    .order('created_at', { ascending: false })
-    .range(offset, offset + limit - 1);
-  if (error) throw error;
-  return Array.isArray(data) ? data : [];
+  const overrides = getOrderOverrides();
+  let list: Order[] = [];
+  try {
+    const { data, error } = await supabase
+      .from('orders')
+      .select('*, clients!client_id(*), order_items(*)')
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
+    if (!error && Array.isArray(data)) {
+      list = data;
+    }
+  } catch (err) {
+    console.warn('[fetchOrders] Supabase error:', err);
+  }
+  return list.map((o) => (overrides[o.id] ? { ...o, ...overrides[o.id] } : o));
 }
 
 export async function fetchOrderById(orderId: string): Promise<Order | null> {
@@ -395,8 +425,14 @@ export async function fetchOrderById(orderId: string): Promise<Order | null> {
 }
 
 export async function updateOrderStatus(id: string, status: Order['status']): Promise<void> {
-  const { error } = await supabase.from('orders').update({ status, updated_at: new Date().toISOString() }).eq('id', id);
-  if (error) throw error;
+  const now = new Date().toISOString();
+  saveOrderOverride(id, { status, updated_at: now });
+  try {
+    const { error } = await supabase.from('orders').update({ status, updated_at: now }).eq('id', id);
+    if (error) console.warn('[updateOrderStatus] Remote error:', error.message);
+  } catch (err) {
+    console.warn('[updateOrderStatus] Exception:', err);
+  }
 }
 
 export async function deleteOrder(id: string): Promise<void> {
@@ -537,8 +573,32 @@ export async function submitQuote(quote: Omit<Quote, 'id' | 'quote_number' | 'st
   }
 }
 
+const QUOTE_OVERRIDES_KEY = 'sca_quote_overrides_v1';
+
+export function getQuoteOverrides(): Record<string, Partial<Quote>> {
+  try {
+    const raw = localStorage.getItem(QUOTE_OVERRIDES_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+export function saveQuoteOverride(id: string, updates: Partial<Quote>): void {
+  try {
+    const current = getQuoteOverrides();
+    current[id] = { ...(current[id] || {}), ...updates };
+    localStorage.setItem(QUOTE_OVERRIDES_KEY, JSON.stringify(current));
+  } catch (e) {
+    console.warn('Could not save quote override:', e);
+  }
+}
+
 export async function fetchQuotes(limit = 50, offset = 0): Promise<Quote[]> {
   const localList = getLocalQuotes();
+  const overrides = getQuoteOverrides();
+  let list: Quote[] = [];
+
   try {
     const { data, error } = await supabase
       .from('quotes')
@@ -552,20 +612,47 @@ export async function fetchQuotes(limit = 50, offset = 0): Promise<Quote[]> {
       }));
       const remoteIds = new Set(remoteList.map((q) => q.id));
       const localOnly = localList.filter((q) => !remoteIds.has(q.id));
-      return [...localOnly, ...remoteList];
+      list = [...localOnly, ...remoteList];
+    } else {
+      list = localList;
     }
   } catch (err) {
     console.warn('[fetchQuotes] Échec Supabase, utilisation du cache local:', err);
+    list = localList;
   }
-  return localList;
+
+  // Appliquer les overrides de statut et notes
+  return list.map((q) => (overrides[q.id] ? { ...q, ...overrides[q.id] } : q));
 }
 
 export async function updateQuoteStatus(id: string, status: QuoteStatus, admin_notes?: string): Promise<void> {
-  const { error } = await supabase
-    .from('quotes')
-    .update({ status, admin_notes: admin_notes || null, updated_at: new Date().toISOString() })
-    .eq('id', id);
-  if (error) throw error;
+  const now = new Date().toISOString();
+
+  // 1. Sauvegarde immédiate dans les overrides persistants
+  saveQuoteOverride(id, { status, admin_notes: admin_notes || null, updated_at: now });
+
+  // 2. Mettre à jour dans la liste locale si présent
+  try {
+    const local = getLocalQuotes();
+    const idx = local.findIndex((q) => q.id === id);
+    if (idx >= 0) {
+      local[idx].status = status;
+      if (admin_notes !== undefined) local[idx].admin_notes = admin_notes || null;
+      local[idx].updated_at = now;
+      localStorage.setItem(LOCAL_QUOTES_KEY, JSON.stringify(local));
+    }
+  } catch {}
+
+  // 3. Essai de mise à jour sur Supabase
+  try {
+    const { error } = await supabase
+      .from('quotes')
+      .update({ status, admin_notes: admin_notes || null, updated_at: now })
+      .eq('id', id);
+    if (error) console.warn('[updateQuoteStatus] Remote update warning:', error.message);
+  } catch (err) {
+    console.warn('[updateQuoteStatus] Remote update exception:', err);
+  }
 }
 
 // ── Study Requests ────────────────────────────────────────────

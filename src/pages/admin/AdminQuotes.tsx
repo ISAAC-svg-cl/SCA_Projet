@@ -38,11 +38,18 @@ const AdminQuotes: React.FC = () => {
   );
 
   const handleStatus = async (id: string, status: Quote['status']) => {
+    // 1. Mise à jour optimiste immédiate dans l'UI
+    setQuotes((prev) => prev.map((q) => (q.id === id ? { ...q, status } : q)));
+    if (selected?.id === id) setSelected((prev) => (prev ? { ...prev, status } : null));
+
     try {
       await updateQuoteStatus(id, status);
-      toast.success('Statut mis à jour');
+      toast.success(`Statut mis à jour : ${quoteStatusLabel(status)}`);
+    } catch (err) {
+      console.error(err);
+      toast.error('Erreur lors de la mise à jour');
       load();
-    } catch (err) { toast.error('Erreur'); }
+    }
   };
 
   return (
@@ -128,10 +135,17 @@ const AdminQuotes: React.FC = () => {
                 </div>
               )}
               <div>
-                <p className="text-xs text-muted-foreground mb-1">Statut</p>
-                <Badge variant="outline" className={`text-xs border ${statusColors[selected.status] || ''}`}>
-                  {quoteStatusLabel(selected.status)}
-                </Badge>
+                <p className="text-xs text-muted-foreground mb-1.5">Modifier le statut</p>
+                <Select value={selected.status} onValueChange={(v) => handleStatus(selected.id, v as Quote['status'])}>
+                  <SelectTrigger className={`h-8 text-xs w-36 border ${statusColors[selected.status] || ''}`}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {['nouveau', 'en_cours', 'traite', 'rejete'].map((s) => (
+                      <SelectItem key={s} value={s}>{quoteStatusLabel(s)}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           )}
