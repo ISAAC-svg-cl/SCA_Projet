@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Trash2, Minus, Plus, ShoppingCart, ChevronLeft, Truck, Store } from 'lucide-react';
+import { Trash2, Minus, Plus, ShoppingCart, ChevronLeft, Truck, Store, Smartphone, Banknote, Copy, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,7 +12,7 @@ import { useCart } from '@/contexts/CartContext';
 import { formatPrice } from '@/lib/helpers';
 import { createOrder } from '@/services/api';
 import { toast } from 'sonner';
-import type { DeliveryMode } from '@/types/index';
+import type { DeliveryMode, PaymentMethod } from '@/types/index';
 
 const DELIVERY_FEE = 5;
 
@@ -22,6 +22,9 @@ const CartPage: React.FC = () => {
 
   const [step, setStep] = useState<'cart' | 'checkout' | 'confirmed'>('cart');
   const [deliveryMode, setDeliveryMode] = useState<DeliveryMode>('livraison');
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('airtel_money');
+  const [paymentReference, setPaymentReference] = useState('');
+  const [copiedNumber, setCopiedNumber] = useState<string | null>(null);
   const [orderId, setOrderId] = useState('');
   const [orderNumber, setOrderNumber] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -32,6 +35,13 @@ const CartPage: React.FC = () => {
 
   const deliveryFee = deliveryMode === 'livraison' ? DELIVERY_FEE : 0;
   const grandTotal = total + deliveryFee;
+
+  const handleCopy = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedNumber(text);
+    toast.success(`Numéro ${text} copié !`);
+    setTimeout(() => setCopiedNumber(null), 2500);
+  };
 
   const handleOrder = async () => {
     if (!form.full_name.trim() || !form.phone.trim()) {
@@ -58,6 +68,8 @@ const CartPage: React.FC = () => {
           delivery_fee: deliveryFee,
           total: grandTotal,
           notes: form.notes || undefined,
+          payment_method: paymentMethod,
+          payment_reference: paymentReference.trim() || undefined,
         }
       );
       setOrderId(result.orderId);
@@ -101,6 +113,29 @@ const CartPage: React.FC = () => {
           <p className="text-muted-foreground mb-2">
             Votre commande <span className="font-bold text-foreground">{orderNumber}</span> a été enregistrée.
           </p>
+
+          <div className="my-6 p-4 rounded-lg border bg-muted/30 text-left text-sm space-y-2">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Mode de règlement :</span>
+              <span className="font-semibold text-foreground">
+                {paymentMethod === 'airtel_money' && 'Airtel Money (0975283155)'}
+                {paymentMethod === 'orange_money' && 'Orange Money (0858657475)'}
+                {paymentMethod === 'cash' && 'Espèces à la livraison / retrait'}
+              </span>
+            </div>
+            {paymentReference && (
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Réf. transaction :</span>
+                <span className="font-mono font-medium text-foreground">{paymentReference}</span>
+              </div>
+            )}
+            {paymentMethod !== 'cash' && (
+              <p className="text-xs text-muted-foreground pt-1 border-t border-border">
+                Titulaire du compte récepteur : <strong className="text-foreground">Juniace Kitungwa</strong>
+              </p>
+            )}
+          </div>
+
           <p className="text-muted-foreground mb-8 text-sm">
             Notre équipe vous contactera sous peu pour confirmer les détails.
           </p>
@@ -219,6 +254,145 @@ const CartPage: React.FC = () => {
                       <Input id="address" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="Votre adresse complète" />
                     </div>
                   )}
+
+                  <Separator />
+
+                  {/* Mode de paiement */}
+                  <div className="space-y-3">
+                    <Label className="font-semibold text-base">Mode de paiement *</Label>
+                    <RadioGroup
+                      value={paymentMethod}
+                      onValueChange={(v) => setPaymentMethod(v as PaymentMethod)}
+                      className="grid sm:grid-cols-3 gap-3"
+                    >
+                      {/* Airtel Money */}
+                      <label className={`flex flex-col justify-between p-3.5 border rounded-lg cursor-pointer transition-all ${
+                        paymentMethod === 'airtel_money' ? 'border-red-500 bg-red-50/50 dark:bg-red-950/20 ring-1 ring-red-500' : 'border-border hover:bg-muted/40'
+                      }`}>
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <Smartphone className="w-4 h-4 text-red-600" />
+                            <span className="font-semibold text-sm">Airtel Money</span>
+                          </div>
+                          <RadioGroupItem value="airtel_money" id="airtel_money" />
+                        </div>
+                        <span className="text-xs text-muted-foreground">RDC (Haut-Katanga)</span>
+                      </label>
+
+                      {/* Orange Money */}
+                      <label className={`flex flex-col justify-between p-3.5 border rounded-lg cursor-pointer transition-all ${
+                        paymentMethod === 'orange_money' ? 'border-orange-500 bg-orange-50/50 dark:bg-orange-950/20 ring-1 ring-orange-500' : 'border-border hover:bg-muted/40'
+                      }`}>
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <Smartphone className="w-4 h-4 text-orange-500" />
+                            <span className="font-semibold text-sm">Orange Money</span>
+                          </div>
+                          <RadioGroupItem value="orange_money" id="orange_money" />
+                        </div>
+                        <span className="text-xs text-muted-foreground">RDC (Haut-Katanga)</span>
+                      </label>
+
+                      {/* Cash */}
+                      <label className={`flex flex-col justify-between p-3.5 border rounded-lg cursor-pointer transition-all ${
+                        paymentMethod === 'cash' ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-border hover:bg-muted/40'
+                      }`}>
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <Banknote className="w-4 h-4 text-primary" />
+                            <span className="font-semibold text-sm">Espèces</span>
+                          </div>
+                          <RadioGroupItem value="cash" id="cash" />
+                        </div>
+                        <span className="text-xs text-muted-foreground">À la réception</span>
+                      </label>
+                    </RadioGroup>
+
+                    {/* Instructions Airtel Money */}
+                    {paymentMethod === 'airtel_money' && (
+                      <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 rounded-lg p-4 space-y-3 mt-3 text-sm">
+                        <div className="flex items-center justify-between flex-wrap gap-2">
+                          <div>
+                            <p className="text-xs text-muted-foreground">Numéro Airtel Money :</p>
+                            <p className="font-mono font-bold text-base text-red-600">0975283155</p>
+                            <p className="text-xs text-muted-foreground">Titulaire : <span className="font-medium text-foreground">Juniace Kitungwa</span></p>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="text-xs flex items-center gap-1.5"
+                            onClick={() => handleCopy('0975283155')}
+                          >
+                            {copiedNumber === '0975283155' ? <Check className="w-3.5 h-3.5 text-green-600" /> : <Copy className="w-3.5 h-3.5" />}
+                            {copiedNumber === '0975283155' ? 'Copié !' : 'Copier le numéro'}
+                          </Button>
+                        </div>
+                        <div className="pt-2 border-t border-red-200/60 dark:border-red-900/60">
+                          <Label htmlFor="payment_ref_airtel" className="text-xs font-medium text-foreground">
+                            Référence / ID de transaction Airtel (optionnel avant validation) :
+                          </Label>
+                          <Input
+                            id="payment_ref_airtel"
+                            value={paymentReference}
+                            onChange={(e) => setPaymentReference(e.target.value)}
+                            placeholder="Ex : TXN12345678 ou numéro d'envoi"
+                            className="mt-1 bg-background text-sm"
+                          />
+                          <p className="text-[11px] text-muted-foreground mt-1">
+                            Effectuez le transfert Airtel Money du montant total vers ce numéro, puis saisissez la référence ou confirmez votre commande.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Instructions Orange Money */}
+                    {paymentMethod === 'orange_money' && (
+                      <div className="bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-900 rounded-lg p-4 space-y-3 mt-3 text-sm">
+                        <div className="flex items-center justify-between flex-wrap gap-2">
+                          <div>
+                            <p className="text-xs text-muted-foreground">Numéro Orange Money :</p>
+                            <p className="font-mono font-bold text-base text-orange-600">0858657475</p>
+                            <p className="text-xs text-muted-foreground">Titulaire : <span className="font-medium text-foreground">Juniace Kitungwa</span></p>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="text-xs flex items-center gap-1.5"
+                            onClick={() => handleCopy('0858657475')}
+                          >
+                            {copiedNumber === '0858657475' ? <Check className="w-3.5 h-3.5 text-green-600" /> : <Copy className="w-3.5 h-3.5" />}
+                            {copiedNumber === '0858657475' ? 'Copié !' : 'Copier le numéro'}
+                          </Button>
+                        </div>
+                        <div className="pt-2 border-t border-orange-200/60 dark:border-orange-900/60">
+                          <Label htmlFor="payment_ref_orange" className="text-xs font-medium text-foreground">
+                            Référence / ID de transaction Orange (optionnel avant validation) :
+                          </Label>
+                          <Input
+                            id="payment_ref_orange"
+                            value={paymentReference}
+                            onChange={(e) => setPaymentReference(e.target.value)}
+                            placeholder="Ex : MP240... ou numéro d'envoi"
+                            className="mt-1 bg-background text-sm"
+                          />
+                          <p className="text-[11px] text-muted-foreground mt-1">
+                            Effectuez le transfert Orange Money du montant total vers ce numéro, puis saisissez la référence ou confirmez votre commande.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Instructions Cash */}
+                    {paymentMethod === 'cash' && (
+                      <div className="bg-muted/50 border border-border rounded-lg p-3 text-xs text-muted-foreground mt-2">
+                        💡 Paiement en espèces en dollars ($) ou équivalent CDF au taux du jour lors de la livraison ou du retrait.
+                      </div>
+                    )}
+                  </div>
+
+                  <Separator />
 
                   <div className="space-y-2">
                     <Label htmlFor="notes">Notes (optionnel)</Label>

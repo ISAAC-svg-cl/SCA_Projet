@@ -141,12 +141,21 @@ export async function generateInvoicePDF(invoice: Invoice): Promise<void> {
   doc.setFont('helvetica', 'normal');
   doc.text(
     `Mode : ${order?.delivery_mode === 'livraison' ? 'Livraison à domicile' : 'Retrait en magasin'}`,
-    14, yMeta + 7
+    14, yMeta + 6
+  );
+  const paymentLabel = order?.payment_method === 'airtel_money'
+    ? 'Airtel Money (0975283155)'
+    : order?.payment_method === 'orange_money'
+    ? 'Orange Money (0858657475)'
+    : 'Espèces (Cash)';
+  doc.text(
+    `Règlement : ${paymentLabel}${order?.payment_reference ? `  (Réf : ${order.payment_reference})` : ''}`,
+    14, yMeta + 12
   );
 
   // ── Tableau articles ──
   runAutoTable(doc, {
-    startY: yMeta + 14,
+    startY: yMeta + 18,
     head: [['Réf', 'Désignation', 'Qté', 'Prix Unit.', 'Total']],
     body: items.map((it) => [
       it.product_reference || '—',
@@ -237,7 +246,7 @@ export async function generateOrderReceiptPDF(order: Order): Promise<void> {
     doc.text('Client comptoir', 14, 62);
   }
 
-  // ── Mode livraison ──
+  // ── Mode livraison & Paiement ──
   const yMeta = 92;
   doc.setFont('helvetica', 'bold');
   doc.text('Mode de livraison :', 14, yMeta);
@@ -246,12 +255,21 @@ export async function generateOrderReceiptPDF(order: Order): Promise<void> {
     order.delivery_mode === 'livraison'
       ? `Livraison à domicile : ${order.delivery_address || client?.address || '—'}`
       : 'Retrait en magasin (Gratuit)',
-    14, yMeta + 7
+    14, yMeta + 6
+  );
+  const paymentReceiptLabel = order.payment_method === 'airtel_money'
+    ? 'Airtel Money (0975283155)'
+    : order.payment_method === 'orange_money'
+    ? 'Orange Money (0858657475)'
+    : 'Espèces (Cash)';
+  doc.text(
+    `Mode de paiement : ${paymentReceiptLabel}${order.payment_reference ? `  (Réf : ${order.payment_reference})` : ''}`,
+    14, yMeta + 12
   );
 
   // ── Tableau articles ──
   runAutoTable(doc, {
-    startY: yMeta + 14,
+    startY: yMeta + 18,
     head: [['Réf', 'Désignation', 'Qté', 'Prix Unit.', 'Total']],
     body: items.length > 0
       ? items.map((it) => [

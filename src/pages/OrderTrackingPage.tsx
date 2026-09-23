@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { Search, Package, Truck, CheckCircle2, Clock, XCircle, FileDown, ArrowLeft, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -235,6 +235,20 @@ const OrderTrackingPage: React.FC = () => {
                     <p className="text-xs text-slate-400">Mode</p>
                     <p className="font-medium">{order.delivery_mode === 'livraison' ? 'Livraison' : 'Retrait'}</p>
                   </div>
+                  <div>
+                    <p className="text-xs text-slate-400">Paiement</p>
+                    <p className="font-semibold text-slate-800">
+                      {order.payment_method === 'airtel_money' && 'Airtel Money (0975283155)'}
+                      {order.payment_method === 'orange_money' && 'Orange Money (0858657475)'}
+                      {(!order.payment_method || order.payment_method === 'cash') && 'Espèces à la livraison/retrait'}
+                    </p>
+                  </div>
+                  {order.payment_reference && (
+                    <div>
+                      <p className="text-xs text-slate-400">Réf. transaction</p>
+                      <p className="font-mono font-bold text-xs text-slate-800">{order.payment_reference}</p>
+                    </div>
+                  )}
                 </div>
 
                 {(order.order_items || []).length > 0 && (

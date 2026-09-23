@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Package, ShoppingBag, FileText, MessageSquare,
-  Users, BarChart2, Menu, X, Zap, LogOut, ChevronRight
+  Users, BarChart2, Menu, X, Zap, LogOut, ChevronRight, FolderKanban
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
@@ -17,6 +17,7 @@ const navItems = [
   { label: 'Factures', path: '/admin/factures', icon: FileText },
   { label: 'Devis', path: '/admin/devis', icon: MessageSquare },
   { label: 'Clients', path: '/admin/clients', icon: Users },
+  { label: 'Réalisations', path: '/admin/realisations', icon: FolderKanban },
 ];
 
 const AdminNavItem: React.FC<{ item: typeof navItems[0]; active: boolean; onClick?: () => void }> = ({ item, active, onClick }) => (

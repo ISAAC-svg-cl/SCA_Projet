@@ -17,7 +17,9 @@ import AdminOrders from './pages/admin/AdminOrders';
 import AdminInvoices from './pages/admin/AdminInvoices';
 import AdminQuotes from './pages/admin/AdminQuotes';
 import AdminClients from './pages/admin/AdminClients';
+import AdminRealizations from './pages/admin/AdminRealizations';
 import OrderTrackingPage from './pages/OrderTrackingPage';
+import RealizationsPage from './pages/Realizations';
 
 export interface RouteConfig {
   name: string;
@@ -37,6 +39,7 @@ export const routes: RouteConfig[] = [
   { name: 'Devis',        path: '/devis',           element: <DevisPage />,       public: true },
   { name: 'Contact',      path: '/contact',         element: <ContactPage />,     public: true },
   { name: 'Conseil',      path: '/conseil',         element: <ConseilPage />,     public: true },
+  { name: 'Réalisations', path: '/realisations',    element: <RealizationsPage />, public: true },
   { name: 'Suivi commande', path: '/suivi-commande', element: <OrderTrackingPage />, public: true },
 
   // ── Admin ─────────────────────────────────────────────────────
@@ -48,4 +51,5 @@ export const routes: RouteConfig[] = [
   { name: 'Factures Admin', path: '/admin/factures',        element: <AdminInvoices />,   public: false },
   { name: 'Devis Admin',    path: '/admin/devis',           element: <AdminQuotes />,     public: false },
   { name: 'Clients Admin',  path: '/admin/clients',         element: <AdminClients />,    public: false },
+  { name: 'Réalisations Admin', path: '/admin/realisations', element: <AdminRealizations />, public: false },
 ];

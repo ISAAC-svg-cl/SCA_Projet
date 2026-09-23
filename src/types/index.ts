@@ -4,6 +4,7 @@ export type StockStatus = 'en_stock' | 'stock_faible' | 'rupture';
 export type OrderStatus = 'en_attente' | 'confirme' | 'en_preparation' | 'livre' | 'annule';
 export type DeliveryMode = 'livraison' | 'retrait';
 export type QuoteStatus = 'nouveau' | 'en_cours' | 'traite' | 'rejete';
+export type PaymentMethod = 'airtel_money' | 'orange_money' | 'cash';
 
 export interface Profile {
   id: string; email: string | null; phone: string | null;
@@ -19,6 +20,26 @@ export interface ProductImage {
   image_url: string;
   alt_text?: string | null;
   is_primary: boolean;
+  sort_order: number;
+  created_at?: string;
+}
+
+export interface Realization {
+  id: string;
+  title: string;
+  description: string | null;
+  location?: string | null;
+  project_date?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RealizationMedia {
+  id: string;
+  realization_id: string;
+  media_url: string;
+  media_type: 'image' | 'video';
+  alt_text?: string | null;
   sort_order: number;
   created_at?: string;
 }
@@ -48,6 +69,8 @@ export interface Order {
   id: string; order_number: string; client_id: string; profile_id: string | null;
   status: OrderStatus; delivery_mode: DeliveryMode; delivery_address: string | null;
   subtotal: number; delivery_fee: number; total: number; notes: string | null;
+  payment_method?: PaymentMethod | null;
+  payment_reference?: string | null;
   created_at: string; updated_at: string;
   clients?: Client; order_items?: OrderItem[];
 }

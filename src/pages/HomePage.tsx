@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ShoppingCart, Wrench, Zap, Sun, Shield, ChevronRight, Star } from 'lucide-react';
+import { ShoppingCart, Wrench, Zap, Sun, Shield, ChevronRight, Star, FolderKanban, MapPin, Calendar, Film, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import MainLayout from '@/components/layouts/MainLayout';
 import ProductCard from '@/components/ProductCard';
-import { fetchProducts, fetchReviews } from '@/services/api';
+import { fetchProducts, fetchReviews, fetchRealizationsWithMedia, RealizationWithMedia } from '@/services/api';
 import type { Product, Review } from '@/types/index';
 import { StarRating } from '@/components/ProductCard';
 
@@ -97,11 +98,20 @@ const servicesData = [
 const HomePage: React.FC = () => {
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
+  const [realizations, setRealizations] = useState<RealizationWithMedia[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([fetchProducts({ limit: 6 }), fetchReviews()])
-      .then(([prods, revs]) => { setFeaturedProducts(prods); setReviews(revs); })
+    Promise.all([
+      fetchProducts({ limit: 6 }),
+      fetchReviews(),
+      fetchRealizationsWithMedia().catch(() => [])
+    ])
+      .then(([prods, revs, reals]) => {
+        setFeaturedProducts(prods);
+        setReviews(revs);
+        setRealizations(reals.slice(0, 3));
+      })
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
@@ -184,6 +194,85 @@ const HomePage: React.FC = () => {
           )}
         </div>
       </section>
+
+      {/* Nos Réalisations Section (affichée dès que l'admin ajoute des réalisations) */}
+      {realizations.length > 0 && (
+        <section className="max-w-7xl mx-auto px-4 md:px-8 py-16">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-10">
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <Zap className="w-4 h-4 text-primary" />
+                <span className="text-xs font-semibold text-primary uppercase tracking-wider">Expertise terrain</span>
+              </div>
+              <h2 className="text-2xl md:text-3xl font-bold sca-heading-accent">
+                Nos Réalisations
+              </h2>
+              <p className="text-muted-foreground mt-1">
+                Aperçu des travaux, installations solaires et chantiers électriques réalisés par SCA.
+              </p>
+            </div>
+            <Button asChild variant="outline" className="border-border self-start sm:self-auto">
+              <Link to="/realisations">Voir toutes nos réalisations →</Link>
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {realizations.map((r) => {
+              const firstMedia = r.media?.[0];
+              return (
+                <Card key={r.id} className="overflow-hidden border border-border group hover:shadow-lg transition-all flex flex-col bg-card">
+                  <div className="relative aspect-video bg-muted overflow-hidden">
+                    {firstMedia ? (
+                      firstMedia.media_type === 'video' ? (
+                        <div className="w-full h-full relative bg-black flex items-center justify-center">
+                          <video src={firstMedia.media_url} className="w-full h-full object-cover" />
+                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                            <Film className="w-8 h-8 text-white drop-shadow" />
+                          </div>
+                        </div>
+                      ) : (
+                        <img
+                          src={firstMedia.media_url}
+                          alt={r.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      )
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-muted-foreground bg-primary/5">
+                        <ImageIcon className="w-10 h-10 opacity-30 text-primary" />
+                      </div>
+                    )}
+                    {r.location && (
+                      <div className="absolute top-2 left-2">
+                        <Badge variant="secondary" className="bg-black/70 text-white text-[11px] backdrop-blur-sm border-0 flex items-center gap-1">
+                          <MapPin className="w-3 h-3 text-primary" /> {r.location}
+                        </Badge>
+                      </div>
+                    )}
+                  </div>
+                  <CardContent className="p-4 flex-1 flex flex-col justify-between">
+                    <div>
+                      <h3 className="font-bold text-base text-foreground group-hover:text-primary transition-colors line-clamp-1">
+                        {r.title}
+                      </h3>
+                      {r.description && (
+                        <p className="text-xs text-muted-foreground mt-2 line-clamp-2 leading-relaxed">
+                          {r.description}
+                        </p>
+                      )}
+                    </div>
+                    <div className="pt-3 mt-3 border-t border-border flex justify-end">
+                      <Button asChild variant="ghost" size="sm" className="text-xs text-primary p-0 h-auto hover:bg-transparent">
+                        <Link to="/realisations">Consulter le projet →</Link>
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       {/* CTA banner */}
       <section className="hero-gradient">

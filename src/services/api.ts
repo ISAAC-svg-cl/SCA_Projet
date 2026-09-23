@@ -1,7 +1,8 @@
 import { supabase } from '@/db/supabase';
 import type {
   Category, Product, Order, OrderItem, Client, Quote,
-  StudyRequest, Review, Invoice, QuoteStatus
+  StudyRequest, Review, Invoice, QuoteStatus,
+  Realization, RealizationMedia, PaymentMethod
 } from '@/types/index';
 
 // ── Categories ──────────────────────────────────────────────
@@ -312,7 +313,16 @@ export async function deleteProduct(id: string): Promise<{ softDeleted: boolean;
 export async function createOrder(
   client: Omit<Client, 'id' | 'created_at' | 'profile_id'>,
   items: Array<{ product_id: string; product_name: string; product_reference: string; unit_price: number; quantity: number; total: number }>,
-  orderMeta: { delivery_mode: 'livraison' | 'retrait'; delivery_address?: string; subtotal: number; delivery_fee: number; total: number; notes?: string }
+  orderMeta: {
+    delivery_mode: 'livraison' | 'retrait';
+    delivery_address?: string;
+    subtotal: number;
+    delivery_fee: number;
+    total: number;
+    notes?: string;
+    payment_method?: PaymentMethod | null;
+    payment_reference?: string | null;
+  }
 ): Promise<{ orderId: string; orderNumber: string }> {
   // 1. Create client
   const { data: clientData, error: clientErr } = await supabase
@@ -323,22 +333,59 @@ export async function createOrder(
   if (clientErr) throw clientErr;
   const clientId = clientData!.id;
 
-  // 2. Create order
-  const { data: orderData, error: orderErr } = await supabase
+  // 2. Create order (avec fallback si les colonnes payment_method/payment_reference ne sont pas encore migrées)
+  let orderData: { id: string; order_number: string } | null = null;
+  const initialPayload: any = {
+    client_id: clientId,
+    delivery_mode: orderMeta.delivery_mode,
+    delivery_address: orderMeta.delivery_address || null,
+    subtotal: orderMeta.subtotal,
+    delivery_fee: orderMeta.delivery_fee,
+    total: orderMeta.total,
+    notes: orderMeta.notes || null,
+    payment_method: orderMeta.payment_method || null,
+    payment_reference: orderMeta.payment_reference || null,
+    order_number: '',
+  };
+
+  const { data: firstTry, error: orderErr } = await supabase
     .from('orders')
-    .insert({
-      client_id: clientId,
-      delivery_mode: orderMeta.delivery_mode,
-      delivery_address: orderMeta.delivery_address || null,
-      subtotal: orderMeta.subtotal,
-      delivery_fee: orderMeta.delivery_fee,
-      total: orderMeta.total,
-      notes: orderMeta.notes || null,
-      order_number: '',
-    })
+    .insert(initialPayload)
     .select('id, order_number')
     .maybeSingle();
-  if (orderErr) throw orderErr;
+
+  if (orderErr) {
+    // Si la colonne payment_method ou payment_reference n'existe pas encore dans Supabase
+    if (orderErr.message.includes('payment_method') || orderErr.message.includes('payment_reference') || orderErr.message.includes('column')) {
+      const fallbackNotes = [
+        orderMeta.notes,
+        orderMeta.payment_method ? `[Paiement: ${orderMeta.payment_method}${orderMeta.payment_reference ? ` - Réf: ${orderMeta.payment_reference}` : ''}]` : null
+      ].filter(Boolean).join('\n');
+
+      const { data: retryData, error: retryErr } = await supabase
+        .from('orders')
+        .insert({
+          client_id: clientId,
+          delivery_mode: orderMeta.delivery_mode,
+          delivery_address: orderMeta.delivery_address || null,
+          subtotal: orderMeta.subtotal,
+          delivery_fee: orderMeta.delivery_fee,
+          total: orderMeta.total,
+          notes: fallbackNotes || null,
+          order_number: '',
+        })
+        .select('id, order_number')
+        .maybeSingle();
+
+      if (retryErr) throw retryErr;
+      orderData = retryData;
+    } else {
+      throw orderErr;
+    }
+  } else {
+    orderData = firstTry;
+  }
+
   const orderId = orderData!.id;
   const orderNumber = orderData!.order_number;
 
@@ -748,3 +795,144 @@ export async function fetchDashboardStats() {
     rupture,
   };
 }
+
+// ── Realizations (Nos réalisations) ───────────────────────────
+export interface RealizationWithMedia extends Realization {
+  media?: RealizationMedia[];
+}
+
+export async function fetchRealizationsWithMedia(): Promise<RealizationWithMedia[]> {
+  try {
+    const { data: realizations, error: rErr } = await supabase
+      .from('realizations')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (rErr) {
+      console.warn('Error fetching realizations:', rErr.message);
+      return [];
+    }
+    if (!realizations || realizations.length === 0) return [];
+
+    const { data: media, error: mErr } = await supabase
+      .from('realization_media')
+      .select('*')
+      .order('sort_order', { ascending: true })
+      .order('created_at', { ascending: true });
+
+    if (mErr) {
+      console.warn('Error fetching realization media:', mErr.message);
+    }
+
+    const mediaList = Array.isArray(media) ? media : [];
+
+    return realizations.map((r: Realization) => ({
+      ...r,
+      media: mediaList.filter((m: RealizationMedia) => m.realization_id === r.id),
+    }));
+  } catch (err) {
+    console.error('Exception fetching realizations with media:', err);
+    return [];
+  }
+}
+
+export async function createRealization(data: {
+  title: string;
+  description?: string | null;
+  location?: string | null;
+  project_date?: string | null;
+}): Promise<Realization> {
+  await ensureAdmin();
+  const { data: inserted, error } = await supabase
+    .from('realizations')
+    .insert({
+      title: data.title,
+      description: data.description || null,
+      location: data.location || null,
+      project_date: data.project_date || null,
+    })
+    .select('*')
+    .single();
+
+  if (error) throw error;
+  return inserted;
+}
+
+export async function updateRealization(
+  id: string,
+  data: Partial<Omit<Realization, 'id' | 'created_at' | 'updated_at'>>
+): Promise<Realization> {
+  await ensureAdmin();
+  const { data: updated, error } = await supabase
+    .from('realizations')
+    .update({
+      ...data,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', id)
+    .select('*')
+    .single();
+
+  if (error) throw error;
+  return updated;
+}
+
+export async function deleteRealization(id: string): Promise<void> {
+  await ensureAdmin();
+  // Delete realization media first (also handled by cascade if configured)
+  await supabase.from('realization_media').delete().eq('realization_id', id);
+  const { error } = await supabase.from('realizations').delete().eq('id', id);
+  if (error) throw error;
+}
+
+export async function addRealizationMedia(data: {
+  realization_id: string;
+  media_url: string;
+  media_type: 'image' | 'video';
+  alt_text?: string | null;
+  sort_order?: number;
+}): Promise<RealizationMedia> {
+  await ensureAdmin();
+  const { data: inserted, error } = await supabase
+    .from('realization_media')
+    .insert({
+      realization_id: data.realization_id,
+      media_url: data.media_url,
+      media_type: data.media_type,
+      alt_text: data.alt_text || null,
+      sort_order: data.sort_order || 0,
+    })
+    .select('*')
+    .single();
+
+  if (error) throw error;
+  return inserted;
+}
+
+export async function deleteRealizationMedia(id: string): Promise<void> {
+  await ensureAdmin();
+  const { error } = await supabase.from('realization_media').delete().eq('id', id);
+  if (error) throw error;
+}
+
+export async function syncRealizationMedia(
+  realizationId: string,
+  mediaItems: Array<{ url: string; type: 'image' | 'video'; alt?: string }>
+): Promise<void> {
+  await ensureAdmin();
+  // Supprimer les médias existants pour cette réalisation
+  await supabase.from('realization_media').delete().eq('realization_id', realizationId);
+
+  if (mediaItems.length > 0) {
+    const rows = mediaItems.map((m, index) => ({
+      realization_id: realizationId,
+      media_url: m.url,
+      media_type: m.type,
+      alt_text: m.alt || null,
+      sort_order: index,
+    }));
+    const { error } = await supabase.from('realization_media').insert(rows);
+    if (error) throw error;
+  }
+}
+

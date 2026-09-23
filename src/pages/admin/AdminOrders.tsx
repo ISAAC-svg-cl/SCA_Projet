@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Search, X, FileDown, Eye, Trash2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -167,16 +167,16 @@ const AdminOrders: React.FC = () => {
           <table className="w-full min-w-max text-sm">
             <thead>
               <tr className="border-b border-border">
-                {['N Commande', 'Client', 'Tel.', 'Date', 'Mode', 'Total', 'Statut', 'Actions'].map((h) => (
+                {['N° Commande', 'Client', 'Tél.', 'Date', 'Mode', 'Paiement', 'Total', 'Statut', 'Actions'].map((h) => (
                   <th key={h} className="whitespace-nowrap text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={8} className="text-center py-10 text-muted-foreground">Chargement...</td></tr>
+                <tr><td colSpan={9} className="text-center py-10 text-muted-foreground">Chargement...</td></tr>
               ) : filtered.length === 0 ? (
-                <tr><td colSpan={8} className="text-center py-10 text-muted-foreground">Aucune commande</td></tr>
+                <tr><td colSpan={9} className="text-center py-10 text-muted-foreground">Aucune commande</td></tr>
               ) : filtered.map((o) => (
                 <tr key={o.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
                   <td className="whitespace-nowrap px-4 py-3 font-mono text-xs font-semibold">{o.order_number}</td>
@@ -185,6 +185,23 @@ const AdminOrders: React.FC = () => {
                   <td className="whitespace-nowrap px-4 py-3 text-muted-foreground text-xs">{formatDate(o.created_at)}</td>
                   <td className="whitespace-nowrap px-4 py-3 text-muted-foreground text-xs">
                     {o.delivery_mode === 'livraison' ? 'Livraison' : 'Retrait'}
+                  </td>
+                  <td className="whitespace-nowrap px-4 py-3 text-xs">
+                    {o.payment_method === 'airtel_money' && (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-red-100 text-red-800 border border-red-200">
+                        Airtel Money
+                      </span>
+                    )}
+                    {o.payment_method === 'orange_money' && (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-orange-100 text-orange-800 border border-orange-200">
+                        Orange Money
+                      </span>
+                    )}
+                    {(!o.payment_method || o.payment_method === 'cash') && (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 text-slate-700 border border-slate-200">
+                        Espèces
+                      </span>
+                    )}
                   </td>
                   <td className="whitespace-nowrap px-4 py-3 font-bold text-primary">{formatPrice(o.total)}</td>
                   <td className="whitespace-nowrap px-4 py-3">
@@ -231,6 +248,25 @@ const AdminOrders: React.FC = () => {
                 <div><p className="text-xs text-muted-foreground">Telephone</p><p className="font-medium">{selected.clients?.phone}</p></div>
                 <div><p className="text-xs text-muted-foreground">Date</p><p className="font-medium">{formatDate(selected.created_at)}</p></div>
                 <div><p className="text-xs text-muted-foreground">Mode</p><p className="font-medium">{selected.delivery_mode === 'livraison' ? 'Livraison' : 'Retrait en magasin'}</p></div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Mode de paiement</p>
+                  <p className="font-semibold text-foreground">
+                    {selected.payment_method === 'airtel_money' && 'Airtel Money (0975283155)'}
+                    {selected.payment_method === 'orange_money' && 'Orange Money (0858657475)'}
+                    {(!selected.payment_method || selected.payment_method === 'cash') && 'Espèces (Cash)'}
+                  </p>
+                </div>
+                {selected.payment_reference ? (
+                  <div>
+                    <p className="text-xs text-muted-foreground">Réf. transaction</p>
+                    <p className="font-mono font-bold text-foreground text-xs">{selected.payment_reference}</p>
+                  </div>
+                ) : (
+                  <div>
+                    <p className="text-xs text-muted-foreground">Réf. transaction</p>
+                    <p className="text-xs text-muted-foreground italic">Non renseignée</p>
+                  </div>
+                )}
                 {selected.delivery_address && <div className="col-span-2"><p className="text-xs text-muted-foreground">Adresse</p><p className="font-medium">{selected.delivery_address}</p></div>}
                 <div className="col-span-2">
                   <p className="text-xs text-muted-foreground mb-1">Modifier le statut</p>

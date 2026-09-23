@@ -10,6 +10,7 @@ const navLinks = [
   { label: 'Accueil', path: '/' },
   { label: 'Quincaillerie', path: '/boutique' },
   { label: 'Services', path: '/services' },
+  { label: 'Réalisations', path: '/realisations' },
   { label: 'Devis', path: '/devis' },
   { label: 'Suivi Commande', path: '/suivi-commande' },
   { label: 'Contact', path: '/contact' },
