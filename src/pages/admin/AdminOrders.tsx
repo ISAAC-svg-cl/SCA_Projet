@@ -19,6 +19,9 @@ import { formatDate, formatPrice, orderStatusLabel } from '@/lib/helpers';
 import { generateInvoicePDF, generateOrderReceiptPDF } from '@/lib/pdfGenerator';
 import type { Order } from '@/types/index';
 import { toast } from 'sonner';
+import airtelLogo from '@/assets/icons/airtel_money.webp';
+import orangeLogo from '@/assets/icons/orange_money.webp';
+import especesLogo from '@/assets/icons/especes_pro.svg';
 
 const STATUS_LIST = ['en_attente', 'confirme', 'en_preparation', 'livre', 'annule'] as const;
 
@@ -188,17 +191,20 @@ const AdminOrders: React.FC = () => {
                   </td>
                   <td className="whitespace-nowrap px-4 py-3 text-xs">
                     {o.payment_method === 'airtel_money' && (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-red-100 text-red-800 border border-red-200">
+                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-medium bg-red-100 text-red-800 border border-red-200">
+                        <img src={airtelLogo} alt="Airtel" className="w-3.5 h-3.5 object-contain" />
                         Airtel Money
                       </span>
                     )}
                     {o.payment_method === 'orange_money' && (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-orange-100 text-orange-800 border border-orange-200">
+                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-medium bg-orange-100 text-orange-800 border border-orange-200">
+                        <img src={orangeLogo} alt="Orange" className="w-3.5 h-3.5 object-contain" />
                         Orange Money
                       </span>
                     )}
                     {(!o.payment_method || o.payment_method === 'cash') && (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 text-slate-700 border border-slate-200">
+                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 text-slate-700 border border-slate-200">
+                        <img src={especesLogo} alt="Espèces" className="w-3.5 h-3.5 object-contain" />
                         Espèces
                       </span>
                     )}
@@ -250,10 +256,25 @@ const AdminOrders: React.FC = () => {
                 <div><p className="text-xs text-muted-foreground">Mode</p><p className="font-medium">{selected.delivery_mode === 'livraison' ? 'Livraison' : 'Retrait en magasin'}</p></div>
                 <div>
                   <p className="text-xs text-muted-foreground">Mode de paiement</p>
-                  <p className="font-semibold text-foreground">
-                    {selected.payment_method === 'airtel_money' && 'Airtel Money (0975283155)'}
-                    {selected.payment_method === 'orange_money' && 'Orange Money (0858657475)'}
-                    {(!selected.payment_method || selected.payment_method === 'cash') && 'Espèces (Cash)'}
+                  <p className="font-semibold text-foreground flex items-center gap-2 mt-0.5">
+                    {selected.payment_method === 'airtel_money' && (
+                      <>
+                        <img src={airtelLogo} alt="Airtel" className="w-4 h-4 object-contain" />
+                        <span>Airtel Money (0975283155)</span>
+                      </>
+                    )}
+                    {selected.payment_method === 'orange_money' && (
+                      <>
+                        <img src={orangeLogo} alt="Orange" className="w-4 h-4 object-contain" />
+                        <span>Orange Money (0858657475)</span>
+                      </>
+                    )}
+                    {(!selected.payment_method || selected.payment_method === 'cash') && (
+                      <>
+                        <img src={especesLogo} alt="Espèces" className="w-4 h-4 object-contain" />
+                        <span>Espèces (Cash)</span>
+                      </>
+                    )}
                   </p>
                 </div>
                 {selected.payment_reference ? (

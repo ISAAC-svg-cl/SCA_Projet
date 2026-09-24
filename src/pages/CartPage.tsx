@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Trash2, Minus, Plus, ShoppingCart, ChevronLeft, Truck, Store, Smartphone, Banknote, Copy, Check } from 'lucide-react';
+import { Trash2, Minus, Plus, ShoppingCart, ChevronLeft, Truck, Store, Smartphone, Banknote, Copy, Check, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,6 +13,9 @@ import { formatPrice } from '@/lib/helpers';
 import { createOrder } from '@/services/api';
 import { toast } from 'sonner';
 import type { DeliveryMode, PaymentMethod } from '@/types/index';
+import airtelLogo from '@/assets/icons/airtel_money.webp';
+import orangeLogo from '@/assets/icons/orange_money.webp';
+import especesLogo from '@/assets/icons/especes_pro.svg';
 
 const DELIVERY_FEE = 5;
 
@@ -115,12 +118,27 @@ const CartPage: React.FC = () => {
           </p>
 
           <div className="my-6 p-4 rounded-lg border bg-muted/30 text-left text-sm space-y-2">
-            <div className="flex justify-between">
+            <div className="flex justify-between items-center">
               <span className="text-muted-foreground">Mode de règlement :</span>
-              <span className="font-semibold text-foreground">
-                {paymentMethod === 'airtel_money' && 'Airtel Money (0975283155)'}
-                {paymentMethod === 'orange_money' && 'Orange Money (0858657475)'}
-                {paymentMethod === 'cash' && 'Espèces à la livraison / retrait'}
+              <span className="font-semibold text-foreground flex items-center gap-2">
+                {paymentMethod === 'airtel_money' && (
+                  <>
+                    <img src={airtelLogo} alt="Airtel Money" className="w-5 h-5 object-contain" />
+                    <span>Airtel Money (0975283155) - RDC (Haut-Katanga)</span>
+                  </>
+                )}
+                {paymentMethod === 'orange_money' && (
+                  <>
+                    <img src={orangeLogo} alt="Orange Money" className="w-5 h-5 object-contain" />
+                    <span>Orange Money (0858657475) - RDC (Haut-Katanga)</span>
+                  </>
+                )}
+                {paymentMethod === 'cash' && (
+                  <>
+                    <img src={especesLogo} alt="Espèces" className="w-5 h-5 object-contain" />
+                    <span>Espèces à la livraison / retrait</span>
+                  </>
+                )}
               </span>
             </div>
             {paymentReference && (
@@ -260,136 +278,266 @@ const CartPage: React.FC = () => {
                   {/* Mode de paiement */}
                   <div className="space-y-3">
                     <Label className="font-semibold text-base">Mode de paiement *</Label>
-                    <RadioGroup
-                      value={paymentMethod}
-                      onValueChange={(v) => setPaymentMethod(v as PaymentMethod)}
-                      className="grid sm:grid-cols-3 gap-3"
-                    >
-                      {/* Airtel Money */}
-                      <label className={`flex flex-col justify-between p-3.5 border rounded-lg cursor-pointer transition-all ${
-                        paymentMethod === 'airtel_money' ? 'border-red-500 bg-red-50/50 dark:bg-red-950/20 ring-1 ring-red-500' : 'border-border hover:bg-muted/40'
-                      }`}>
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2">
-                            <Smartphone className="w-4 h-4 text-red-600" />
-                            <span className="font-semibold text-sm">Airtel Money</span>
-                          </div>
-                          <RadioGroupItem value="airtel_money" id="airtel_money" />
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                      {/* Bouton Airtel Money */}
+                      <button
+                        type="button"
+                        onClick={() => setPaymentMethod('airtel_money')}
+                        className={`flex flex-col items-center justify-between p-2.5 sm:p-3 rounded-lg border-2 transition-all duration-200 text-center cursor-pointer ${
+                          paymentMethod === 'airtel_money'
+                            ? 'border-red-600 bg-red-50/50 shadow-sm'
+                            : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/60'
+                        }`}
+                      >
+                        <div className="h-9 w-full flex items-center justify-center">
+                          <img
+                            src={airtelLogo}
+                            alt="Airtel Money"
+                            className="max-h-8 max-w-[95px] object-contain"
+                          />
                         </div>
-                        <span className="text-xs text-muted-foreground">RDC (Haut-Katanga)</span>
-                      </label>
+                        <div className="mt-1.5">
+                          <p className="font-bold text-xs text-foreground">
+                            Airtel Money
+                          </p>
+                          <p className="text-[11px] text-muted-foreground">
+                            RDC (Haut-Katanga)
+                          </p>
+                        </div>
+                      </button>
 
-                      {/* Orange Money */}
-                      <label className={`flex flex-col justify-between p-3.5 border rounded-lg cursor-pointer transition-all ${
-                        paymentMethod === 'orange_money' ? 'border-orange-500 bg-orange-50/50 dark:bg-orange-950/20 ring-1 ring-orange-500' : 'border-border hover:bg-muted/40'
-                      }`}>
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2">
-                            <Smartphone className="w-4 h-4 text-orange-500" />
-                            <span className="font-semibold text-sm">Orange Money</span>
-                          </div>
-                          <RadioGroupItem value="orange_money" id="orange_money" />
+                      {/* Bouton Orange Money */}
+                      <button
+                        type="button"
+                        onClick={() => setPaymentMethod('orange_money')}
+                        className={`flex flex-col items-center justify-between p-2.5 sm:p-3 rounded-lg border-2 transition-all duration-200 text-center cursor-pointer ${
+                          paymentMethod === 'orange_money'
+                            ? 'border-orange-500 bg-orange-50/50 shadow-sm'
+                            : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/60'
+                        }`}
+                      >
+                        <div className="h-9 w-full flex items-center justify-center">
+                          <img
+                            src={orangeLogo}
+                            alt="Orange Money"
+                            className="max-h-8 max-w-[95px] object-contain"
+                          />
                         </div>
-                        <span className="text-xs text-muted-foreground">RDC (Haut-Katanga)</span>
-                      </label>
+                        <div className="mt-1.5">
+                          <p className="font-bold text-xs text-foreground">
+                            Orange Money
+                          </p>
+                          <p className="text-[11px] text-muted-foreground">
+                            RDC (Haut-Katanga)
+                          </p>
+                        </div>
+                      </button>
 
-                      {/* Cash */}
-                      <label className={`flex flex-col justify-between p-3.5 border rounded-lg cursor-pointer transition-all ${
-                        paymentMethod === 'cash' ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-border hover:bg-muted/40'
-                      }`}>
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2">
-                            <Banknote className="w-4 h-4 text-primary" />
-                            <span className="font-semibold text-sm">Espèces</span>
-                          </div>
-                          <RadioGroupItem value="cash" id="cash" />
+                      {/* Bouton Espèces */}
+                      <button
+                        type="button"
+                        onClick={() => setPaymentMethod('cash')}
+                        className={`flex flex-col items-center justify-between p-2.5 sm:p-3 rounded-lg border-2 transition-all duration-200 text-center cursor-pointer ${
+                          paymentMethod === 'cash'
+                            ? 'border-emerald-600 bg-emerald-50/50 shadow-sm'
+                            : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/60'
+                        }`}
+                      >
+                        <div className="h-9 w-full flex items-center justify-center">
+                          <img
+                            src={especesLogo}
+                            alt="Espèces"
+                            className="max-h-8 max-w-[95px] object-contain"
+                          />
                         </div>
-                        <span className="text-xs text-muted-foreground">À la réception</span>
-                      </label>
-                    </RadioGroup>
+                        <div className="mt-1.5">
+                          <p className="font-bold text-xs text-foreground">
+                            Espèces
+                          </p>
+                          <p className="text-[11px] text-muted-foreground">
+                            À la réception
+                          </p>
+                        </div>
+                      </button>
+                    </div>
 
                     {/* Instructions Airtel Money */}
                     {paymentMethod === 'airtel_money' && (
-                      <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 rounded-lg p-4 space-y-3 mt-3 text-sm">
-                        <div className="flex items-center justify-between flex-wrap gap-2">
+                      <div className="bg-red-50/70 dark:bg-red-950/20 border border-red-200 dark:border-red-900 rounded-xl p-4 space-y-3.5 mt-3 text-sm">
+                        {/* En-tête avec montant et conversion CDF */}
+                        <div className="flex items-center justify-between flex-wrap gap-2 pb-2.5 border-b border-red-200/70 dark:border-red-900/60">
                           <div>
-                            <p className="text-xs text-muted-foreground">Numéro Airtel Money :</p>
-                            <p className="font-mono font-bold text-base text-red-600">0975283155</p>
-                            <p className="text-xs text-muted-foreground">Titulaire : <span className="font-medium text-foreground">Juniace Kitungwa</span></p>
+                            <span className="text-[11px] font-semibold text-red-700 dark:text-red-400 uppercase tracking-wider">Montant total à transférer</span>
+                            <div className="flex items-baseline gap-2 mt-0.5">
+                              <span className="text-xl font-bold text-foreground">{formatPrice(grandTotal)}</span>
+                              <span className="text-xs text-muted-foreground font-medium">
+                                (≈ {(grandTotal * 2850).toLocaleString('fr-FR')} FC au taux de 2 850 FC/$)
+                              </span>
+                            </div>
                           </div>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            className="text-xs flex items-center gap-1.5"
-                            onClick={() => handleCopy('0975283155')}
-                          >
-                            {copiedNumber === '0975283155' ? <Check className="w-3.5 h-3.5 text-green-600" /> : <Copy className="w-3.5 h-3.5" />}
-                            {copiedNumber === '0975283155' ? 'Copié !' : 'Copier le numéro'}
-                          </Button>
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300">
+                            <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse"></span>
+                            Airtel Money RDC
+                          </span>
                         </div>
-                        <div className="pt-2 border-t border-red-200/60 dark:border-red-900/60">
-                          <Label htmlFor="payment_ref_airtel" className="text-xs font-medium text-foreground">
-                            Référence / ID de transaction Airtel (optionnel avant validation) :
+
+                        {/* Coordonnées destinataire */}
+                        <div className="grid sm:grid-cols-2 gap-3 bg-white dark:bg-background/80 p-3 rounded-lg border border-red-100 dark:border-red-900/40">
+                          <div>
+                            <p className="text-xs text-muted-foreground">Numéro Airtel Money récepteur :</p>
+                            <p className="font-mono font-bold text-lg text-red-600 tracking-wide mt-0.5">0975283155</p>
+                          </div>
+                          <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center">
+                            <div className="text-left sm:text-right">
+                              <p className="text-xs text-muted-foreground">Bénéficiaire vérifié :</p>
+                              <p className="font-semibold text-sm text-foreground">Juniace Kitungwa</p>
+                            </div>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="text-xs mt-1.5 h-7 gap-1.5 border-red-200 hover:bg-red-50"
+                              onClick={() => handleCopy('0975283155')}
+                            >
+                              {copiedNumber === '0975283155' ? <Check className="w-3.5 h-3.5 text-green-600" /> : <Copy className="w-3.5 h-3.5" />}
+                              {copiedNumber === '0975283155' ? 'Copié !' : 'Copier le numéro'}
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* Guide 3 étapes simples */}
+                        <div className="space-y-1 text-xs text-muted-foreground bg-white/60 dark:bg-background/40 p-2.5 rounded-lg border border-red-100/60">
+                          <p className="font-semibold text-foreground text-xs mb-1">Étapes pour valider votre commande :</p>
+                          <p>1. Composez <strong>*501#</strong> ou ouvrez l'application Airtel Money et transférez <strong>{formatPrice(grandTotal)}</strong> au <strong>0975283155</strong>.</p>
+                          <p>2. Vérifiez que le nom affiché est bien <strong>Juniace Kitungwa</strong> avant de confirmer avec votre code PIN.</p>
+                          <p>3. Entrez la référence / ID reçue par SMS ci-dessous (ou confirmez directement votre commande).</p>
+                        </div>
+
+                        {/* Champ Référence */}
+                        <div className="pt-1 border-t border-red-200/60 dark:border-red-900/60">
+                          <Label htmlFor="payment_ref_airtel" className="text-xs font-semibold text-foreground flex items-center justify-between">
+                            <span>ID / Référence de transaction Airtel :</span>
+                            <span className="text-[11px] text-muted-foreground font-normal">Optionnel avant validation</span>
                           </Label>
                           <Input
                             id="payment_ref_airtel"
                             value={paymentReference}
                             onChange={(e) => setPaymentReference(e.target.value)}
-                            placeholder="Ex : TXN12345678 ou numéro d'envoi"
-                            className="mt-1 bg-background text-sm"
+                            placeholder="Ex : TXN123456789 ou numéro de confirmation"
+                            className="mt-1.5 bg-background font-mono text-sm"
                           />
-                          <p className="text-[11px] text-muted-foreground mt-1">
-                            Effectuez le transfert Airtel Money du montant total vers ce numéro, puis saisissez la référence ou confirmez votre commande.
-                          </p>
                         </div>
                       </div>
                     )}
 
                     {/* Instructions Orange Money */}
                     {paymentMethod === 'orange_money' && (
-                      <div className="bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-900 rounded-lg p-4 space-y-3 mt-3 text-sm">
-                        <div className="flex items-center justify-between flex-wrap gap-2">
+                      <div className="bg-orange-50/70 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-900 rounded-xl p-4 space-y-3.5 mt-3 text-sm">
+                        {/* En-tête avec montant et conversion CDF */}
+                        <div className="flex items-center justify-between flex-wrap gap-2 pb-2.5 border-b border-orange-200/70 dark:border-orange-900/60">
                           <div>
-                            <p className="text-xs text-muted-foreground">Numéro Orange Money :</p>
-                            <p className="font-mono font-bold text-base text-orange-600">0858657475</p>
-                            <p className="text-xs text-muted-foreground">Titulaire : <span className="font-medium text-foreground">Juniace Kitungwa</span></p>
+                            <span className="text-[11px] font-semibold text-orange-700 dark:text-orange-400 uppercase tracking-wider">Montant total à transférer</span>
+                            <div className="flex items-baseline gap-2 mt-0.5">
+                              <span className="text-xl font-bold text-foreground">{formatPrice(grandTotal)}</span>
+                              <span className="text-xs text-muted-foreground font-medium">
+                                (≈ {(grandTotal * 2850).toLocaleString('fr-FR')} FC au taux de 2 850 FC/$)
+                              </span>
+                            </div>
                           </div>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            className="text-xs flex items-center gap-1.5"
-                            onClick={() => handleCopy('0858657475')}
-                          >
-                            {copiedNumber === '0858657475' ? <Check className="w-3.5 h-3.5 text-green-600" /> : <Copy className="w-3.5 h-3.5" />}
-                            {copiedNumber === '0858657475' ? 'Copié !' : 'Copier le numéro'}
-                          </Button>
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300">
+                            <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse"></span>
+                            Orange Money RDC
+                          </span>
                         </div>
-                        <div className="pt-2 border-t border-orange-200/60 dark:border-orange-900/60">
-                          <Label htmlFor="payment_ref_orange" className="text-xs font-medium text-foreground">
-                            Référence / ID de transaction Orange (optionnel avant validation) :
+
+                        {/* Coordonnées destinataire */}
+                        <div className="grid sm:grid-cols-2 gap-3 bg-white dark:bg-background/80 p-3 rounded-lg border border-orange-100 dark:border-orange-900/40">
+                          <div>
+                            <p className="text-xs text-muted-foreground">Numéro Orange Money récepteur :</p>
+                            <p className="font-mono font-bold text-lg text-orange-600 tracking-wide mt-0.5">0858657475</p>
+                          </div>
+                          <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center">
+                            <div className="text-left sm:text-right">
+                              <p className="text-xs text-muted-foreground">Bénéficiaire vérifié :</p>
+                              <p className="font-semibold text-sm text-foreground">Juniace Kitungwa</p>
+                            </div>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="text-xs mt-1.5 h-7 gap-1.5 border-orange-200 hover:bg-orange-50"
+                              onClick={() => handleCopy('0858657475')}
+                            >
+                              {copiedNumber === '0858657475' ? <Check className="w-3.5 h-3.5 text-green-600" /> : <Copy className="w-3.5 h-3.5" />}
+                              {copiedNumber === '0858657475' ? 'Copié !' : 'Copier le numéro'}
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* Guide 3 étapes simples */}
+                        <div className="space-y-1 text-xs text-muted-foreground bg-white/60 dark:bg-background/40 p-2.5 rounded-lg border border-orange-100/60">
+                          <p className="font-semibold text-foreground text-xs mb-1">Étapes pour valider votre commande :</p>
+                          <p>1. Composez <strong>*144#</strong> ou ouvrez l'application Orange Money et transférez <strong>{formatPrice(grandTotal)}</strong> au <strong>0858657475</strong>.</p>
+                          <p>2. Vérifiez que le nom affiché est bien <strong>Juniace Kitungwa</strong> avant de confirmer avec votre code PIN.</p>
+                          <p>3. Entrez la référence / ID reçue par SMS ci-dessous (ou confirmez directement votre commande).</p>
+                        </div>
+
+                        {/* Champ Référence */}
+                        <div className="pt-1 border-t border-orange-200/60 dark:border-orange-900/60">
+                          <Label htmlFor="payment_ref_orange" className="text-xs font-semibold text-foreground flex items-center justify-between">
+                            <span>ID / Référence de transaction Orange :</span>
+                            <span className="text-[11px] text-muted-foreground font-normal">Optionnel avant validation</span>
                           </Label>
                           <Input
                             id="payment_ref_orange"
                             value={paymentReference}
                             onChange={(e) => setPaymentReference(e.target.value)}
-                            placeholder="Ex : MP240... ou numéro d'envoi"
-                            className="mt-1 bg-background text-sm"
+                            placeholder="Ex : MP240... ou numéro de confirmation"
+                            className="mt-1.5 bg-background font-mono text-sm"
                           />
-                          <p className="text-[11px] text-muted-foreground mt-1">
-                            Effectuez le transfert Orange Money du montant total vers ce numéro, puis saisissez la référence ou confirmez votre commande.
-                          </p>
                         </div>
                       </div>
                     )}
 
                     {/* Instructions Cash */}
                     {paymentMethod === 'cash' && (
-                      <div className="bg-muted/50 border border-border rounded-lg p-3 text-xs text-muted-foreground mt-2">
-                        💡 Paiement en espèces en dollars ($) ou équivalent CDF au taux du jour lors de la livraison ou du retrait.
+                      <div className="bg-emerald-50/70 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900 rounded-xl p-4 space-y-3 mt-3 text-sm">
+                        <div className="flex items-center justify-between flex-wrap gap-2 pb-2.5 border-b border-emerald-200/70 dark:border-emerald-900/60">
+                          <div>
+                            <span className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Règlement à la livraison ou au comptoir</span>
+                            <div className="flex items-baseline gap-2 mt-0.5">
+                              <span className="text-xl font-bold text-foreground">{formatPrice(grandTotal)}</span>
+                              <span className="text-xs text-muted-foreground font-medium">
+                                (ou ≈ {(grandTotal * 2850).toLocaleString('fr-FR')} FC)
+                              </span>
+                            </div>
+                          </div>
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300">
+                            💵 Espèces acceptées
+                          </span>
+                        </div>
+                        <ul className="space-y-1.5 text-xs text-muted-foreground">
+                          <li className="flex items-start gap-2">
+                            <span className="text-emerald-600 font-bold">•</span>
+                            <span>Paiement direct en mains propres au livreur ou lors du retrait en magasin à Lubumbashi.</span>
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <span className="text-emerald-600 font-bold">•</span>
+                            <span>Devises acceptées : <strong>Dollars américains (USD)</strong> ou <strong>Francs Congolais (CDF)</strong> au taux officiel du jour.</span>
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <span className="text-emerald-600 font-bold">•</span>
+                            <span>Un reçu officiel vous sera remis immédiatement lors de l'encaissement.</span>
+                          </li>
+                        </ul>
                       </div>
                     )}
+
+                    {/* Badge réassurance */}
+                    <div className="flex items-center justify-center gap-2 pt-1 text-xs text-muted-foreground">
+                      <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span>Transactions vérifiées directement par notre équipe • Aucun frais caché</span>
+                    </div>
                   </div>
 
                   <Separator />

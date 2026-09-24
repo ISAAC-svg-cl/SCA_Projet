@@ -9,6 +9,9 @@ import { formatDate, formatPrice } from '@/lib/helpers';
 import type { Order } from '@/types/index';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
+import airtelLogo from '@/assets/icons/airtel_money.webp';
+import orangeLogo from '@/assets/icons/orange_money.webp';
+import especesLogo from '@/assets/icons/especes_pro.svg';
 
 const STATUS_CONFIG: Record<string, { label: string; icon: React.FC<any>; color: string; bg: string; desc: string }> = {
   en_attente: {
@@ -237,11 +240,26 @@ const OrderTrackingPage: React.FC = () => {
                   </div>
                   <div>
                     <p className="text-xs text-slate-400">Paiement</p>
-                    <p className="font-semibold text-slate-800">
-                      {order.payment_method === 'airtel_money' && 'Airtel Money (0975283155)'}
-                      {order.payment_method === 'orange_money' && 'Orange Money (0858657475)'}
-                      {(!order.payment_method || order.payment_method === 'cash') && 'Espèces à la livraison/retrait'}
-                    </p>
+                    <div className="flex items-center gap-2 mt-1">
+                      {order.payment_method === 'airtel_money' && (
+                        <>
+                          <img src={airtelLogo} alt="Airtel Money" className="h-6 w-6 object-contain rounded" />
+                          <span className="font-semibold text-slate-800">Airtel Money (0975283155) - RDC (Haut-Katanga)</span>
+                        </>
+                      )}
+                      {order.payment_method === 'orange_money' && (
+                        <>
+                          <img src={orangeLogo} alt="Orange Money" className="h-6 w-6 object-contain rounded" />
+                          <span className="font-semibold text-slate-800">Orange Money (0858657475) - RDC (Haut-Katanga)</span>
+                        </>
+                      )}
+                      {(!order.payment_method || order.payment_method === 'cash') && (
+                        <>
+                          <img src={especesLogo} alt="Espèces" className="h-6 w-6 object-contain rounded" />
+                          <span className="font-semibold text-slate-800">Espèces à la livraison/retrait - RDC (Haut-Katanga)</span>
+                        </>
+                      )}
+                    </div>
                   </div>
                   {order.payment_reference && (
                     <div>
