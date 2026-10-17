@@ -24,9 +24,15 @@
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     <script>
+      // Forcer le nettoyage des anciens Service Workers en cache pour charger la dernière version
       if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then((registrations) => {
+          for (const registration of registrations) {
+            registration.update();
+          }
+        });
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js').then((reg) => {
+          navigator.serviceWorker.register('/sw.js?v=' + Date.now()).then((reg) => {
             reg.update();
           }).catch(() => {});
         });
