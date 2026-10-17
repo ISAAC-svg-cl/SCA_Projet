@@ -3,7 +3,16 @@ export type UserRole = 'user' | 'admin';
 export type StockStatus = 'en_stock' | 'stock_faible' | 'rupture';
 export type OrderStatus = 'en_attente' | 'confirme' | 'en_preparation' | 'livre' | 'annule';
 export type DeliveryMode = 'livraison' | 'retrait';
-export type QuoteStatus = 'nouveau' | 'en_cours' | 'traite' | 'rejete';
+export type QuoteStatus =
+  | 'brouillon'
+  | 'envoye'
+  | 'accepte'
+  | 'refuse'
+  | 'expire'
+  | 'nouveau'
+  | 'en_cours'
+  | 'traite'
+  | 'rejete';
 export type PaymentMethod = 'airtel_money' | 'orange_money' | 'cash';
 
 export interface Profile {
@@ -84,11 +93,45 @@ export interface Invoice {
   total: number; issued_at: string; created_at: string;
   orders?: Order; clients?: Client;
 }
+export interface QuoteItem {
+  id?: string;
+  reference?: string;
+  designation: string;
+  description?: string;
+  unit?: string; // pcs, m, rouleau, forfait, jour, etc.
+  quantity: number;
+  unit_price: number;
+  total: number;
+}
+
 export interface Quote {
-  id: string; quote_number: string; full_name: string; phone: string; email: string | null;
-  project_type: string; description: string; address: string | null;
-  photo_urls: string[] | null; status: QuoteStatus; admin_notes: string | null;
-  created_at: string; updated_at: string;
+  id: string;
+  quote_number: string;
+  full_name: string;
+  phone: string;
+  email: string | null;
+  project_type: string;
+  description: string;
+  address: string | null;
+  work_location?: string | null; // Lieu spécifique des travaux
+  currency?: 'USD' | 'CDF';
+  items?: QuoteItem[];
+  subtotal?: number;
+  discount?: number;
+  discount_type?: 'percent' | 'fixed';
+  transport_fee?: number;
+  total_amount?: number;
+  payment_terms?: string | null;
+  execution_delay?: string | null;
+  validity_days?: number;
+  observations?: string | null;
+  responsible_name?: string; // Ingénieur Juniace Atanaz
+  converted_order_id?: string | null;
+  photo_urls: string[] | null;
+  status: QuoteStatus;
+  admin_notes: string | null;
+  created_at: string;
+  updated_at: string;
 }
 export interface StudyRequest {
   id: string; full_name: string; phone: string; email: string | null;

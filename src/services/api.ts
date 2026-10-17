@@ -1,6 +1,6 @@
 import { supabase } from '@/db/supabase';
 import type {
-  Category, Product, Order, OrderItem, Client, Quote,
+  Category, Product, Order, OrderItem, Client, Quote, QuoteItem,
   StudyRequest, Review, Invoice, QuoteStatus,
   Realization, RealizationMedia, PaymentMethod
 } from '@/types/index';
@@ -556,46 +556,94 @@ export function saveLocalQuote(quote: Quote): void {
   } catch {}
 }
 
-export async function submitQuote(quote: Omit<Quote, 'id' | 'quote_number' | 'status' | 'admin_notes' | 'created_at' | 'updated_at'>): Promise<void> {
-  const clientName = quote.full_name || (quote as any).client_name;
+export interface CreateQuoteInput {
+  id?: string;
+  quote_number?: string;
+  full_name: string;
+  phone: string;
+  email?: string | null;
+  project_type: string;
+  description: string;
+  address?: string | null;
+  work_location?: string | null;
+  currency?: 'USD' | 'CDF';
+  items?: QuoteItem[];
+  subtotal?: number;
+  discount?: number;
+  discount_type?: 'percent' | 'fixed';
+  transport_fee?: number;
+  total_amount?: number;
+  payment_terms?: string | null;
+  execution_delay?: string | null;
+  validity_days?: number;
+  observations?: string | null;
+  responsible_name?: string;
+  converted_order_id?: string | null;
+  photo_urls?: string[] | null;
+  status?: QuoteStatus;
+  admin_notes?: string | null;
+}
 
-  // Intégrer les liens de photos éventuels dans la description
-  let finalDescription = quote.description;
-  if (quote.photo_urls && quote.photo_urls.length > 0) {
-    finalDescription += `\n\n[Photos jointes :\n${quote.photo_urls.map((u) => `- ${u}`).join('\n')}]`;
+export async function createQuote(input: CreateQuoteInput): Promise<Quote> {
+  const clientName = input.full_name || (input as any).client_name;
+
+  let finalDescription = input.description;
+  if (input.photo_urls && input.photo_urls.length > 0) {
+    finalDescription += `\n\n[Photos jointes :\n${input.photo_urls.map((u) => `- ${u}`).join('\n')}]`;
   }
 
-  const payload: Record<string, any> = {
-    client_name: clientName,
-    phone: quote.phone,
-    email: quote.email || null,
-    project_type: quote.project_type,
-    description: finalDescription,
-    address: quote.address || null,
-  };
-
-  const tempId = crypto.randomUUID();
+  const tempId = input.id || crypto.randomUUID();
   const now = new Date().toISOString();
-  const localQuote: Quote = {
+  const status: QuoteStatus = input.status || 'brouillon';
+  const admin_notes = input.admin_notes || null;
+  const quote_number = input.quote_number || ('DEV-' + new Date().getFullYear() + '-' + Math.floor(1000 + Math.random() * 9000));
+
+  let localQuote: Quote = {
     id: tempId,
-    quote_number: 'DEV-' + new Date().getFullYear() + '-' + Math.floor(1000 + Math.random() * 9000),
+    quote_number,
     full_name: clientName,
-    phone: quote.phone,
-    email: quote.email || null,
-    project_type: quote.project_type,
+    phone: input.phone,
+    email: input.email || null,
+    project_type: input.project_type,
     description: finalDescription,
-    address: quote.address || null,
-    photo_urls: quote.photo_urls || null,
-    status: 'nouveau',
-    admin_notes: null,
+    address: input.address || null,
+    work_location: input.work_location || null,
+    currency: input.currency || 'USD',
+    items: input.items || [],
+    subtotal: input.subtotal,
+    discount: input.discount,
+    discount_type: input.discount_type,
+    transport_fee: input.transport_fee,
+    total_amount: input.total_amount,
+    payment_terms: input.payment_terms || null,
+    execution_delay: input.execution_delay || null,
+    validity_days: input.validity_days || 30,
+    observations: input.observations || null,
+    responsible_name: input.responsible_name || 'Ingénieur Juniace Atanaz',
+    converted_order_id: input.converted_order_id || null,
+    photo_urls: input.photo_urls || null,
+    status,
+    admin_notes,
     created_at: now,
     updated_at: now,
   };
 
-  // Sauvegarde locale immédiate (garantit zéro perte)
+  // Sauvegarde locale et override immédiats (garantit 0 perte)
   saveLocalQuote(localQuote);
+  saveQuoteOverride(tempId, localQuote);
 
   try {
+    const payload: Record<string, any> = {
+      client_name: clientName,
+      phone: input.phone,
+      email: input.email || null,
+      project_type: input.project_type,
+      description: finalDescription,
+      address: input.address || null,
+      status,
+      admin_notes,
+    };
+
     let { data, error } = await supabase.from('quotes').insert(payload).select().single();
 
     if (error && error.message?.includes('client_name')) {
@@ -607,16 +655,158 @@ export async function submitQuote(quote: Omit<Quote, 'id' | 'quote_number' | 'st
     }
 
     if (!error && data) {
-      saveLocalQuote({
+      localQuote = {
         ...localQuote,
         id: data.id,
         quote_number: data.quote_number || localQuote.quote_number,
-      });
+      };
+      saveLocalQuote(localQuote);
+      saveQuoteOverride(data.id, localQuote);
     } else if (error) {
-      console.warn('[submitQuote] Insertion distante échouée, devis sécurisé en local:', error.message);
+      console.warn('[createQuote] Insertion distante échouée, devis sécurisé en local:', error.message);
     }
   } catch (err) {
-    console.warn('[submitQuote] Exception réseau, devis sécurisé en local:', err);
+    console.warn('[createQuote] Exception réseau, devis sécurisé en local:', err);
+  }
+
+  return localQuote;
+}
+
+export async function updateQuote(id: string, updates: Partial<Quote>): Promise<Quote> {
+  const now = new Date().toISOString();
+  saveQuoteOverride(id, { ...updates, updated_at: now });
+
+  const local = getLocalQuotes();
+  const idx = local.findIndex((q) => q.id === id);
+  let updatedQuote: Quote | null = null;
+  if (idx >= 0) {
+    local[idx] = { ...local[idx], ...updates, updated_at: now };
+    updatedQuote = local[idx];
+    localStorage.setItem(LOCAL_QUOTES_KEY, JSON.stringify(local));
+  }
+
+  try {
+    const payload: Record<string, any> = { updated_at: now };
+    if (updates.status) payload.status = updates.status;
+    if (updates.admin_notes !== undefined) payload.admin_notes = updates.admin_notes;
+    if (updates.description !== undefined) payload.description = updates.description;
+    if (updates.full_name) payload.full_name = updates.full_name;
+    if (updates.phone) payload.phone = updates.phone;
+    if (updates.email !== undefined) payload.email = updates.email;
+    if (updates.address !== undefined) payload.address = updates.address;
+    if (updates.project_type) payload.project_type = updates.project_type;
+
+    await supabase.from('quotes').update(payload).eq('id', id);
+  } catch (err) {
+    console.warn('[updateQuote] Remote update exception:', err);
+  }
+
+  return updatedQuote || ({ id, ...updates } as Quote);
+}
+
+export async function duplicateQuote(id: string): Promise<Quote> {
+  const quotes = await fetchQuotes(200);
+  const target = quotes.find((q) => q.id === id);
+  if (!target) throw new Error('Devis introuvable');
+
+  const clonedInput: CreateQuoteInput = {
+    full_name: target.full_name,
+    phone: target.phone,
+    email: target.email,
+    project_type: target.project_type,
+    description: target.description,
+    address: target.address,
+    work_location: target.work_location,
+    currency: target.currency,
+    items: target.items ? JSON.parse(JSON.stringify(target.items)) : [],
+    subtotal: target.subtotal,
+    discount: target.discount,
+    discount_type: target.discount_type,
+    transport_fee: target.transport_fee,
+    total_amount: target.total_amount,
+    payment_terms: target.payment_terms,
+    execution_delay: target.execution_delay,
+    validity_days: target.validity_days,
+    observations: target.observations ? `(Copie de ${target.quote_number}) ${target.observations}` : `Copie du devis ${target.quote_number}`,
+    responsible_name: target.responsible_name,
+    photo_urls: target.photo_urls,
+    status: 'brouillon',
+    admin_notes: target.admin_notes ? `Dupliqué depuis ${target.quote_number}. ${target.admin_notes}` : `Dupliqué depuis ${target.quote_number}`,
+  };
+
+  return await createQuote(clonedInput);
+}
+
+export async function convertQuoteToOrder(quote: Quote): Promise<{ orderId: string; orderNumber: string }> {
+  const clientData = {
+    full_name: quote.full_name,
+    phone: quote.phone,
+    email: quote.email || null,
+    address: quote.work_location || quote.address || 'Chantier client',
+    profile_id: null,
+  };
+
+  const subtotal = quote.subtotal || quote.total_amount || 0;
+  const deliveryFee = quote.transport_fee || 0;
+  const total = quote.total_amount || (subtotal + deliveryFee);
+
+  const orderMeta = {
+    delivery_mode: (quote.transport_fee && quote.transport_fee > 0 ? 'livraison' : 'retrait') as 'livraison' | 'retrait',
+    delivery_address: quote.work_location || quote.address || null,
+    subtotal,
+    delivery_fee: deliveryFee,
+    total,
+    notes: `Commande générée automatiquement depuis le Devis N° ${quote.quote_number}.`,
+    payment_method: 'cash' as const,
+  };
+
+  const items = quote.items && quote.items.length > 0
+    ? quote.items.map((it) => ({
+        product_id: it.id || crypto.randomUUID(),
+        product_name: it.designation + (it.unit ? ` (${it.unit})` : ''),
+        product_reference: it.reference || 'REF-DEVIS',
+        unit_price: Number(it.unit_price) || 0,
+        quantity: Number(it.quantity) || 1,
+        total: Number(it.total) || ((Number(it.unit_price) || 0) * (Number(it.quantity) || 1)),
+      }))
+    : [{
+        product_id: crypto.randomUUID(),
+        product_name: quote.project_type || 'Fournitures et prestations devis',
+        product_reference: 'DEV-PRESTATION',
+        unit_price: total,
+        quantity: 1,
+        total,
+      }];
+
+  const { orderId, orderNumber } = await createOrder(clientData, orderMeta, items);
+
+  // Mettre à jour le devis en 'accepte' et enregistrer la référence commande
+  await updateQuote(quote.id, {
+    status: 'accepte',
+    converted_order_id: orderId,
+    admin_notes: `Devis validé et converti en commande N° ${orderNumber} le ${new Date().toLocaleDateString('fr-FR')}.`,
+  });
+
+  return { orderId, orderNumber };
+}
+
+export async function submitQuote(quote: Omit<Quote, 'id' | 'quote_number' | 'status' | 'admin_notes' | 'created_at' | 'updated_at'>): Promise<void> {
+  await createQuote(quote);
+}
+
+export async function deleteQuote(id: string): Promise<void> {
+  try {
+    const local = getLocalQuotes();
+    const updated = local.filter((q) => q.id !== id);
+    localStorage.setItem(LOCAL_QUOTES_KEY, JSON.stringify(updated));
+
+    const overrides = getQuoteOverrides();
+    delete overrides[id];
+    localStorage.setItem(QUOTE_OVERRIDES_KEY, JSON.stringify(overrides));
+
+    await supabase.from('quotes').delete().eq('id', id);
+  } catch (err) {
+    console.warn('[deleteQuote] Erreur lors de la suppression du devis:', err);
   }
 }
 

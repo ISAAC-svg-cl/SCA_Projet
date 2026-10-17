@@ -47,6 +47,11 @@ export function orderStatusLabel(status: string): string {
 
 export function quoteStatusLabel(status: string): string {
   const labels: Record<string, string> = {
+    brouillon: 'Brouillon',
+    envoye: 'Envoyé',
+    accepte: 'Accepté',
+    refuse: 'Refusé',
+    expire: 'Expiré',
     nouveau: 'Nouveau',
     en_cours: 'En cours',
     traite: 'Traité',
