@@ -539,12 +539,113 @@ export async function fetchInvoices(limit = 50, offset = 0): Promise<Invoice[]> 
 // ── Quotes ───────────────────────────────────────────────────
 const LOCAL_QUOTES_KEY = 'sca_local_quotes_v1';
 
+const DEFAULT_DEMO_QUOTES: Quote[] = [
+  {
+    id: 'demo-quote-1',
+    quote_number: 'DEV-2026-7207',
+    full_name: 'Junior',
+    phone: '0975283155',
+    email: 'junior@example.com',
+    project_type: 'Système solaire résidentiel & hybride',
+    description: 'Installation kit solaire hybride 5kVA',
+    address: 'Lubumbashi',
+    work_location: 'Lubumbashi',
+    currency: 'USD',
+    items: [
+      { id: 'it-1', reference: 'SOL-01', designation: 'Kit solaire hybride 5kVA', description: 'Onduleur + 8 panneaux + batteries', unit: 'kit', quantity: 1, unit_price: 3200, total: 3200 }
+    ],
+    subtotal: 3200,
+    discount: 0,
+    transport_fee: 50,
+    total_amount: 3250,
+    status: 'brouillon',
+    responsible_name: 'Ingénieur Juniace Atanaz',
+    created_at: '2026-10-17T10:00:00Z',
+    updated_at: '2026-10-17T10:00:00Z',
+  },
+  {
+    id: 'demo-quote-2',
+    quote_number: 'DEV-2026-8963',
+    full_name: 'Deborah',
+    phone: '0975283155',
+    email: 'deborah@example.com',
+    project_type: 'Rénovation & Mise aux normes électriques',
+    description: 'Rénovation tableau et câblage complet',
+    address: 'Météo',
+    work_location: 'Météo',
+    currency: 'USD',
+    items: [
+      { id: 'it-2', reference: 'ELEC-01', designation: 'Rénovation tableau électrique', description: 'Tableau 24 modules + disjoncteurs', unit: 'ensemble', quantity: 1, unit_price: 750, total: 750 }
+    ],
+    subtotal: 750,
+    discount: 0,
+    transport_fee: 25,
+    total_amount: 775,
+    status: 'brouillon',
+    responsible_name: 'Ingénieur Juniace Atanaz',
+    created_at: '2026-10-17T11:00:00Z',
+    updated_at: '2026-10-17T11:00:00Z',
+  },
+  {
+    id: 'demo-quote-3',
+    quote_number: 'DEV-2026-4827',
+    full_name: 'isaac edmond',
+    phone: '0970417726',
+    email: 'isaac@example.com',
+    project_type: 'Rénovation & Mise aux normes électriques',
+    description: 'Fourniture matériel électrique et disjoncteurs',
+    address: 'golf',
+    work_location: 'golf',
+    currency: 'USD',
+    items: [
+      { id: 'it-3', reference: 'MAT-01', designation: 'Fourniture câbles et appareillage', description: 'Câbles 2.5mm² et prises étanches', unit: 'forfait', quantity: 1, unit_price: 199.10, total: 199.10 }
+    ],
+    subtotal: 199.10,
+    discount: 0,
+    transport_fee: 0,
+    total_amount: 199.10,
+    status: 'brouillon',
+    responsible_name: 'Ingénieur Juniace Atanaz',
+    created_at: '2026-10-17T12:00:00Z',
+    updated_at: '2026-10-17T12:00:00Z',
+  },
+  {
+    id: 'demo-quote-4',
+    quote_number: 'DEV-2026-0013',
+    full_name: 'Juniace Atanaz',
+    phone: '0975283155',
+    email: 'juniace@sca-rdc.com',
+    project_type: 'Système solaire commercial',
+    description: 'Centrale solaire commerciale avec stockage lithium',
+    address: 'Haut-Katanga',
+    work_location: 'Haut-Katanga',
+    currency: 'USD',
+    items: [
+      { id: 'it-4', reference: 'SOL-COMM', designation: 'Système Solaire Commercial 15kVA', description: 'Étude technique, panneaux et onduleurs industriels', unit: 'forfait', quantity: 1, unit_price: 8500, total: 8500 }
+    ],
+    subtotal: 8500,
+    discount: 0,
+    transport_fee: 0,
+    total_amount: 8500,
+    status: 'accepte',
+    responsible_name: 'Ingénieur Juniace Atanaz',
+    created_at: '2026-09-22T08:00:00Z',
+    updated_at: '2026-09-22T08:00:00Z',
+  }
+];
+
 export function getLocalQuotes(): Quote[] {
   try {
     const raw = localStorage.getItem(LOCAL_QUOTES_KEY);
-    return raw ? JSON.parse(raw) : [];
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+    // Si aucun devis local n'est encore enregistré, initialiser avec la liste par défaut
+    localStorage.setItem(LOCAL_QUOTES_KEY, JSON.stringify(DEFAULT_DEMO_QUOTES));
+    return DEFAULT_DEMO_QUOTES;
   } catch {
-    return [];
+    return DEFAULT_DEMO_QUOTES;
   }
 }
 
