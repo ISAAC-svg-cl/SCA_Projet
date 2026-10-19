@@ -733,6 +733,33 @@ export async function createQuote(input: CreateQuoteInput): Promise<Quote> {
   saveLocalQuote(localQuote);
   saveQuoteOverride(tempId, localQuote);
 
+  // Mapper le statut vers l'enum valide Supabase ('nouveau' | 'en_cours' | 'traite' | 'rejete')
+  const mapStatusToSupabase = (s?: string): string => {
+    switch (s) {
+      case 'accepte': return 'traite';
+      case 'refuse': return 'rejete';
+      case 'envoye': return 'en_cours';
+      case 'brouillon': return 'nouveau';
+      default: return 'nouveau';
+    }
+  };
+
+  const quoteDetailsJson = JSON.stringify({
+    currency: input.currency || 'USD',
+    items: input.items || [],
+    subtotal: input.subtotal || 0,
+    discount: input.discount || 0,
+    transport_fee: input.transport_fee || 0,
+    total_amount: input.total_amount || 0,
+    responsible_name: input.responsible_name || 'Ingénieur Juniace Atanaz',
+    work_location: input.work_location || input.address || null,
+    payment_terms: input.payment_terms || null,
+    execution_delay: input.execution_delay || null,
+    validity_days: input.validity_days || 30,
+    observations: input.observations || null,
+    raw_status: status,
+  });
+
   try {
     const payload: Record<string, any> = {
       client_name: clientName,
@@ -740,9 +767,10 @@ export async function createQuote(input: CreateQuoteInput): Promise<Quote> {
       email: input.email || null,
       project_type: input.project_type,
       description: finalDescription,
-      address: input.address || null,
-      status,
-      admin_notes,
+      address: input.work_location || input.address || null,
+      estimated_amount: input.total_amount || input.subtotal || null,
+      status: mapStatusToSupabase(status),
+      admin_notes: quoteDetailsJson,
     };
 
     let { data, error } = await supabase.from('quotes').insert(payload).select().single();
@@ -943,14 +971,58 @@ export async function fetchQuotes(limit = 50, offset = 0): Promise<Quote[]> {
       .select('*')
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
+
     if (!error && Array.isArray(data)) {
-      const remoteList: Quote[] = data.map((q: any) => ({
-        ...q,
-        full_name: q.full_name || q.client_name || '',
-      }));
+      const remoteList: Quote[] = data.map((q: any) => {
+        let parsedDetails: any = null;
+        if (q.admin_notes && typeof q.admin_notes === 'string' && q.admin_notes.trim().startsWith('{')) {
+          try {
+            parsedDetails = JSON.parse(q.admin_notes);
+          } catch {}
+        }
+
+        const mapStatusFromSupabase = (s: string): QuoteStatus => {
+          if (parsedDetails?.raw_status) return parsedDetails.raw_status;
+          switch (s) {
+            case 'traite': return 'accepte';
+            case 'rejete': return 'refuse';
+            case 'en_cours': return 'envoye';
+            case 'nouveau': return 'brouillon';
+            default: return 'brouillon';
+          }
+        };
+
+        return {
+          id: q.id,
+          quote_number: q.quote_number || '',
+          full_name: q.client_name || q.full_name || '',
+          phone: q.phone || '',
+          email: q.email || null,
+          project_type: q.project_type || 'Installation générale',
+          description: q.description || '',
+          address: q.address || null,
+          work_location: parsedDetails?.work_location || q.address || null,
+          currency: parsedDetails?.currency || 'USD',
+          items: parsedDetails?.items || [],
+          subtotal: parsedDetails?.subtotal ?? (Number(q.estimated_amount) || 0),
+          discount: parsedDetails?.discount ?? 0,
+          transport_fee: parsedDetails?.transport_fee ?? 0,
+          total_amount: parsedDetails?.total_amount ?? (Number(q.estimated_amount) || 0),
+          payment_terms: parsedDetails?.payment_terms || null,
+          execution_delay: parsedDetails?.execution_delay || null,
+          validity_days: parsedDetails?.validity_days || 30,
+          observations: parsedDetails?.observations || null,
+          responsible_name: parsedDetails?.responsible_name || 'Ingénieur Juniace Atanaz',
+          status: mapStatusFromSupabase(q.status),
+          admin_notes: parsedDetails ? null : q.admin_notes,
+          created_at: q.created_at,
+          updated_at: q.updated_at,
+        };
+      });
+
       const remoteIds = new Set(remoteList.map((q) => q.id));
-      const localOnly = localList.filter((q) => !remoteIds.has(q.id));
-      list = [...localOnly, ...remoteList];
+      const localOnly = localList.filter((q) => !remoteIds.has(q.id) && !remoteList.some(r => r.quote_number === q.quote_number));
+      list = [...remoteList, ...localOnly];
     } else {
       list = localList;
     }
