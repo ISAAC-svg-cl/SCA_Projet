@@ -101,11 +101,30 @@ const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
+    // 1. Vérifier si une session admin locale de secours est active
+    const localAdmin = localStorage.getItem('sca_admin_logged_in');
+    if (localAdmin === 'true') {
+      setChecking(false);
+      return;
+    }
+
     supabase.auth.getSession().then(async ({ data }) => {
-      if (!data.session) { navigate('/admin'); return; }
-      const { data: profile } = await supabase.from('profiles').select('role').eq('id', data.session.user.id).maybeSingle();
+      if (!data.session) {
+        navigate('/admin');
+        return;
+      }
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', data.session.user.id)
+        .maybeSingle();
+
       const isAdmin = profile?.role === 'admin' || data.session.user.email === 'admin@sca.com';
-      if (!isAdmin) { await supabase.auth.signOut(); navigate('/admin'); return; }
+      if (!isAdmin) {
+        await supabase.auth.signOut();
+        navigate('/admin');
+        return;
+      }
       setChecking(false);
     });
   }, [navigate]);
