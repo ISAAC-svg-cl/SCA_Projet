@@ -24,18 +24,20 @@
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     <script>
-      // Forcer le nettoyage des anciens Service Workers en cache pour charger la dernière version
+      // Désactiver et supprimer tout Service Worker obsolète pour charger le code en direct
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then((registrations) => {
-          for (const registration of registrations) {
-            registration.update();
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+          for (var r of registrations) {
+            r.unregister();
           }
         });
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js?v=' + Date.now()).then((reg) => {
-            reg.update();
-          }).catch(() => {});
-        });
+        if ('caches' in window) {
+          caches.keys().then(function(names) {
+            for (var name of names) {
+              caches.delete(name);
+            }
+          });
+        }
       }
     </script>
   </body>
