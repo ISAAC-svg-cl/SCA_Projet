@@ -72,13 +72,35 @@ const AdminOrders: React.FC = () => {
     }
   };
 
+  const handleDownloadReceiptDirect = async (orderOrId: Order | string) => {
+    const orderId = typeof orderOrId === 'string' ? orderOrId : orderOrId.id;
+    setPdfLoading(`receipt-${orderId}`);
+    try {
+      let order = typeof orderOrId !== 'string' ? orderOrId : orders.find((o) => o.id === orderId);
+      if (!order || !order.order_items || order.order_items.length === 0) {
+        order = (await fetchOrderById(orderId)) || order;
+      }
+      if (order) {
+        await generateOrderReceiptPDF(order);
+        toast.success(`Reçu de commande ${order.order_number} téléchargé (Double Signature)`);
+      } else {
+        toast.error('Commande introuvable');
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('Erreur lors du téléchargement du reçu');
+    } finally {
+      setPdfLoading(null);
+    }
+  };
+
   const handleDownloadPDF = async (orderId: string) => {
     setPdfLoading(orderId);
     try {
       const invoice = await fetchInvoiceByOrderId(orderId);
       if (invoice) {
         await generateInvoicePDF(invoice);
-        toast.success('Facture PDF telechargee');
+        toast.success('Facture PDF téléchargée');
         return;
       }
       let order = orders.find((o) => o.id === orderId);
@@ -87,13 +109,13 @@ const AdminOrders: React.FC = () => {
       }
       if (order) {
         await generateOrderReceiptPDF(order);
-        toast.success('Recu PDF telecharge');
+        toast.success('Reçu PDF téléchargé');
       } else {
         toast.error('Commande introuvable');
       }
     } catch (err) {
       console.error(err);
-      toast.error('Erreur lors du telechargement du document');
+      toast.error('Erreur lors du téléchargement du document');
     } finally {
       setPdfLoading(null);
     }
@@ -227,8 +249,15 @@ const AdminOrders: React.FC = () => {
                       <Button variant="ghost" size="icon" className="h-8 w-8" title="Voir detail" onClick={() => setSelected(o)}>
                         <Eye className="w-3.5 h-3.5" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8" title="Telecharger PDF" onClick={() => handleDownloadPDF(o.id)} disabled={pdfLoading === o.id}>
-                        <FileDown className={`w-3.5 h-3.5 ${pdfLoading === o.id ? 'animate-bounce' : ''}`} />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-primary hover:bg-primary/10"
+                        title="Télécharger le Reçu officiel (Double Signature Client & Ingénieur Juniace)"
+                        onClick={() => handleDownloadReceiptDirect(o)}
+                        disabled={pdfLoading === `receipt-${o.id}`}
+                      >
+                        <FileDown className={`w-3.5 h-3.5 ${pdfLoading === `receipt-${o.id}` ? 'animate-bounce' : ''}`} />
                       </Button>
                       <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10" title="Supprimer" onClick={() => setDeleteId(o.id)}>
                         <Trash2 className="w-3.5 h-3.5" />
@@ -328,14 +357,23 @@ const AdminOrders: React.FC = () => {
                 <p className="text-muted-foreground">Livraison : {formatPrice(selected.delivery_fee)}</p>
                 <p className="font-bold text-lg text-primary">Total : {formatPrice(selected.total)}</p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <Button
                   className="flex-1 gap-2 bg-primary hover:bg-primary/90 text-primary-foreground"
+                  onClick={() => handleDownloadReceiptDirect(selected)}
+                  disabled={pdfLoading === `receipt-${selected.id}`}
+                >
+                  <FileDown className="w-4 h-4" />
+                  {pdfLoading === `receipt-${selected.id}` ? 'Génération...' : 'Télécharger le Reçu officiel (Double Signature)'}
+                </Button>
+                <Button
+                  variant="secondary"
+                  className="gap-2"
                   onClick={() => handleDownloadPDF(selected.id)}
                   disabled={pdfLoading === selected.id}
                 >
                   <FileDown className="w-4 h-4" />
-                  {pdfLoading === selected.id ? 'Generation...' : 'Telecharger PDF'}
+                  Facture
                 </Button>
                 <Button
                   variant="outline"
