@@ -1020,9 +1020,13 @@ export async function fetchQuotes(limit = 50, offset = 0): Promise<Quote[]> {
         };
       });
 
-      const remoteIds = new Set(remoteList.map((q) => q.id));
-      const localOnly = localList.filter((q) => !remoteIds.has(q.id) && !remoteList.some(r => r.quote_number === q.quote_number));
-      list = [...remoteList, ...localOnly];
+      const cleanRemoteList = remoteList.filter(
+        (q) => !q.full_name.includes('[IGNORE_TEST]') && !q.full_name.includes('Test Enum')
+      );
+
+      const remoteIds = new Set(cleanRemoteList.map((q) => q.id));
+      const localOnly = localList.filter((q) => !remoteIds.has(q.id) && !cleanRemoteList.some(r => r.quote_number === q.quote_number));
+      list = [...cleanRemoteList, ...localOnly];
     } else {
       list = localList;
     }
